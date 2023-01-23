@@ -387,7 +387,7 @@ class node(object):
         if self.language == '':
             return self.label
         else:
-            return "{}:{}_{}".format(self.label, self.token, 's' if self.language is 'Source' else 't')
+            return "{}:{}_{}".format(self.label, self.token, 's' if self.language is 'English' else 't')
 
 
 class grammarPoint(object):

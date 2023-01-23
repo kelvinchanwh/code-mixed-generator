@@ -26,6 +26,9 @@ if __name__ == "__main__":
     stages_to_run = stages_to_run.split(",")
     stages_to_run = [x.strip() for x in stages_to_run]
 
+    if "translate" in stages_to_run:
+        print("====================\n\nSTARTING TRANSLATOR...\n\n====================")
+        p_aligner = run_command(["python", "translate.py"])
     if "aligner" in stages_to_run:
         print("====================\n\nSTARTING ALIGNER...\n\n====================")
         p_aligner = run_command(["python", "aligner.py"])
