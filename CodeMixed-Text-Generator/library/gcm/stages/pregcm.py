@@ -32,17 +32,17 @@ def setup_pregcm(corpus, aligns, pfms):
     pregcm_output_loc = config_pregcm["pregcm_output_loc"] if config_pregcm["pregcm_output_loc"] else lang1_code + "-to-" + lang2_code 
 
     # write corpus to input files
-    with open(os.path.join(DATA_DIR, lang1_in_file), 'w') as f:
+    with open(os.path.join(DATA_DIR, lang1_in_file), 'w+') as f:
         f.write(corpus['lang1'])
-    with open(os.path.join(DATA_DIR, lang2_in_file), 'w') as f:
+    with open(os.path.join(DATA_DIR, lang2_in_file), 'w+') as f:
         f.write(corpus['lang2'])
 
     # write alignments to file
-    with open(os.path.join(DATA_DIR, align_op_file), 'w') as f:
+    with open(os.path.join(DATA_DIR, align_op_file), 'w+') as f:
         f.write("\n".join(aligns))
 
     if pfms is not None:
-        with open(os.path.join(DATA_DIR, pfms_file), 'w') as f:
+        with open(os.path.join(DATA_DIR, pfms_file), 'w+') as f:
             f.write("\n".join(pfms))
 
     return pregcm_output_loc

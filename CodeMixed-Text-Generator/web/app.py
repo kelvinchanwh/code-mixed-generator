@@ -87,7 +87,7 @@ def tree2png(treestring, outname):
         svg_data = img.get_svg()
         # save the svg file to the disk
         print('writing generated svg to disk..')
-        with open(IMAGE_DIR + 'tmp.svg', 'w', encoding='utf-8') as fp:
+        with open(IMAGE_DIR + 'tmp.svg', 'w+', encoding='utf-8') as fp:
                 svg_data.write(fp, pretty=True, indent=2)
         # return svg_data
         print('conveting from svg to png..')
@@ -171,7 +171,7 @@ def update_gcm_config(source_lang, target_lang, linguistic_theory):
     config.set('GCM', 'k', '-1')
     config.set('GCM', 'linguistic_theory', linguistic_theory)
 
-    with open(config_path, 'w') as cfg:
+    with open(config_path, 'w+') as cfg:
         config.write(cfg)
 
 
@@ -186,16 +186,16 @@ def setup_gcm(source_lang, target_lang, source_sentence, target_sentence, alignm
     align_op_file = lang1_code + '-to-' + lang2_code + '-input_parallel_alignments'
     gcm_op_file = os.path.join(lang1_code + '-to-' + lang2_code + '-gcm', 'out' + '-cm-' + lang1_code + '-' + lang2_code + '.txt') 
 
-    with open(os.path.join(data_path, lang1_in_file), 'w') as l1:
+    with open(os.path.join(data_path, lang1_in_file), 'w+') as l1:
         l1.write(source_sentence+'\n'+'युवा क्रांतिकारियों का एक बड़ा समूह उनके चारों ओर एकत्रित हो गया था .')
 
-    with open(os.path.join(data_path, lang2_in_file), 'w') as l2:
+    with open(os.path.join(data_path, lang2_in_file), 'w+') as l2:
         l2.write(target_sentence+'\n'+'A large group of young revolutionaries had gathered around them .')
 
-    with open(os.path.join(data_path, pfms_file), 'w') as pf:
+    with open(os.path.join(data_path, pfms_file), 'w+') as pf:
         pf.write('0.0'+'\n'+'0.0')
 
-    with open(os.path.join(data_path, align_op_file), 'w') as af:
+    with open(os.path.join(data_path, align_op_file), 'w+') as af:
         af.write(alignment+'\n'+'0-4 1-5 2-3 3-0 4-1 5-2 6-9 7-8 8-8 9-7 11-6 12-6 13-1')
 
     return os.path.join(data_path, gcm_op_file)

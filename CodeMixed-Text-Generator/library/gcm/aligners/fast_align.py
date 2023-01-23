@@ -12,10 +12,10 @@ def get_config():
 
 def write_to_file(lang1_sents, lang1_in_file, lang2_sents, lang2_in_file):
     # write lang1 file
-    with open(os.path.join(BASE_DIR, "data", lang1_in_file), "w") as f:
+    with open(os.path.join(BASE_DIR, "data", lang1_in_file), "w+") as f:
         f.write(lang1_sents)
     # write lang2 file
-    with open(os.path.join(BASE_DIR, "data", lang2_in_file), "w") as f:
+    with open(os.path.join(BASE_DIR, "data", lang2_in_file), "w+") as f:
         f.write(lang2_sents)
 
 def gen_aligns(corpus):

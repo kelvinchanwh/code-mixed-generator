@@ -20,14 +20,14 @@ def setup_gcm(processed_corpus, block, total_size, lang1_code, lang2_code, pregc
             lower_bound = i + 1 - block if i != total_size - 1 else i - (i % block)
 
             # writing flag file
-            with open(pregcm_output_loc + "/flag-cm-" + lang1_code + "-" + lang2_code + "-" + str(lower_bound) + ".txt", "w") as f:
+            with open(pregcm_output_loc + "/flag-cm-" + lang1_code + "-" + lang2_code + "-" + str(lower_bound) + ".txt", "w+") as f:
                 f.write("{}".format(lower_bound))
 
             # outstring
             out_string = processed_corpus[lower_bound : i+1]
 
             # writing input file
-            with open(pregcm_output_loc + "/input-cm-" + lang1_code + "-" + lang2_code + "-" + str(lower_bound) + ".txt", "w") as f:
+            with open(pregcm_output_loc + "/input-cm-" + lang1_code + "-" + lang2_code + "-" + str(lower_bound) + ".txt", "w+") as f:
                 f.write("\n\n".join(out_string))
 
 def gen(processed_corpus):

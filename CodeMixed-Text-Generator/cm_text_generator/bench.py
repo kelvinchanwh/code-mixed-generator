@@ -258,5 +258,5 @@ if __name__ == "__main__":
         data = f.read().split('\n')
     res = main(data)
     res = ['{}\t{}'.format(s[0], s[1]) for s in res]
-    with open(sys.argv[2], 'w') as f:
+    with open(sys.argv[2], 'w+') as f:
         f.write('\n'.join(res))

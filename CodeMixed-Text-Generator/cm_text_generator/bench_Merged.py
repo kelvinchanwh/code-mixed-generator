@@ -270,5 +270,5 @@ if __name__ == "__main__":
     res = main(data)
     res = ['{}\t{}'.format(s[0], s[1]) for s in res]
     gcm_output = '\n'.join(res) 
-    with open(sys.argv[2], 'w') as f:
+    with open(sys.argv[2], 'w+') as f:
         f.write(gcm_output)

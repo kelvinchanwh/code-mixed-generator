@@ -46,7 +46,7 @@ def main():
             if end > num_sentences:
                 # Handling value of end for the last batch
                 end = num_sentences
-            with open(os.path.join(args.output_dir, str(i), file_name), 'w') as f:
+            with open(os.path.join(args.output_dir, str(i), file_name), 'w+') as f:
                 f.write('\n'.join(lines[start:end]))
 
     pre_gcm_command_template = 'python pre_gcm.py --input-path {} --output-path {}/pre_gcm/ --max-pfms 0.7'

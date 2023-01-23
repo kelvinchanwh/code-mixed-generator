@@ -83,7 +83,7 @@ def stanford_parser_setup(logger):
 
 
 def benepar_setup():
-    berkeley_parser = benepar.Parser("benepar_en2")
+    berkeley_parser = benepar.Parser("benepar_en3")
     return berkeley_parser
 
 def main(parsed_sentences = None):
@@ -100,9 +100,9 @@ def main(parsed_sentences = None):
 
     # setup file paths using config file
     config_aligner, config_pregcm, config_general = get_config()
-    lang1 = config_general["language_1"] if config_general["language_1"] else "HINDI"
+    lang1 = config_general["language_1"] if config_general["language_1"] else "EN"
     lang1_code = lang1.lower()[:2]
-    lang2 = config_general["language_2"] if config_general["language_2"] else "ENGLISH"
+    lang2 = config_general["language_2"] if config_general["language_2"] else "ZH"
     lang2_code = lang2.lower()[:2]
     input_loc = config_general["input_loc"] if config_general["input_loc"] else "data"
     output_loc = config_general["output_loc"] if config_general["output_loc"] else "data"
@@ -144,7 +144,7 @@ def main(parsed_sentences = None):
             with open_file(source_file, "r") as f:
                 l = f.read().strip().split("\n")
                 total = len(l)
-            with open("{}/count".format(output_dir), "w") as f:
+            with open("{}/count".format(output_dir), "w+") as f:
                 f.write(str(total))
 
             logger.info("Parsing {} sentences".format(total))

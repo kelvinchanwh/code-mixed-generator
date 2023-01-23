@@ -117,9 +117,9 @@ if __name__ == "__main__":
 
     # setup file paths using config file
     config_pregcm, config_gcm, config_general, config_output = get_config()
-    lang1 = config_general["language_1"] if config_general["language_1"] else "HINDI"
+    lang1 = config_general["language_1"] if config_general["language_1"] else "EN"
     lang1_code = lang1.lower()[:2]
-    lang2 = config_general["language_2"] if config_general["language_2"] else "ENGLISH"
+    lang2 = config_general["language_2"] if config_general["language_2"] else "ZH-TW"
     lang2_code = lang2.lower()[:2]
     input_loc = config_general["input_loc"] if config_general["input_loc"] else "data"
     pregcm_output_loc = config_pregcm["pregcm_output_loc"] if config_pregcm["pregcm_output_loc"] else lang1_code + "-to-" + lang2_code 
@@ -187,6 +187,6 @@ if __name__ == "__main__":
         for j in i:
             finaloutput += "[CM]" + j[0] + "\n[TREE]" + j[1] + "\n"
     outfile = '{}/out-cm-{}-{}.txt'.format(outdir, source_lang, target_lang)
-    with open(outfile, 'w') as f:
+    with open(outfile, 'w+') as f:
         f.write(finaloutput)
     logger.info("Sentence Generation Done")
