@@ -161,13 +161,16 @@ mkdir data
 
 The above step will take some time based on your internet speed as Stanford Parser is a heavy package.
 
-7. If one of the languages that you want to code-mix is English, download the English language model for Benepar using the following commands:
+7. If one of the languages that you want to code-mix is English, download the English language model for Benepar and punkt using the following commands:
 
 a. Open a python terminal and write the following code:
 
 ```python
 import benepar
-benepar.download('benepar_en2')
+benepar.download('benepar_en3')
+
+import nltk
+nltk.download('punkt')
 ```
 Here's how it will look like:
 
