@@ -97,6 +97,70 @@ def fast_align(pfms_file, lang1_code, lang2_code, align_op_file, lang1_op_file, 
 
         # Writes PFMS file
         write_pfms(indices, total_length, pfms_file, lang1_code, lang2_code)
+    
+def awesome_align(pfms_file, lang1_code, lang2_code, align_op_file, lang1_op_file, lang2_op_file):
+    total_length = len(lang1_in)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root_dir = os.getcwd()
+
+        with open("{}/parallel".format(tmpdir), "w+") as f:
+            lines = ["{} ||| {}".format(lang1_s, lang2_s) for lang1_s, lang2_s in zip(lang1_in, lang2_in)]
+            f.write("\n".join(lines))
+
+        path_to_awesome_align = "{}/alignment_generator/awesome-align-master".format(root_dir)
+        path_to_model = "{}/model_without_co".format(path_to_awesome_align)
+        subprocess_call = ["python", "{}/awesome_align/run_align.py".format(path_to_awesome_align),
+                            "--output_file", "{}/alignments".format(tmpdir),
+                            "--model_name_or_path", path_to_model,
+                            "--data_file", "{}/parallel".format(tmpdir),
+                            "--extraction", "softmax",
+                            "--batch_size", "32"
+                            ]
+
+        os.makedirs("{}/awesome_align".format(tmpdir), exist_ok=True)
+        # with open("{}/fast_align/forward.align".format(tmpdir), "w+") as stdout:
+        #     subprocess.run(subprocess_call, stdout=stdout)
+        # subprocess_call.append("-r")
+        # with open("{}/fast_align/reverse.align".format(tmpdir), "w+") as stdout:
+        #     subprocess.run(subprocess_call, stdout=stdout)
+        # subprocess_call = ["{}/atools".format(path_to_fast_align),
+        #                     "-c",
+        #                     "grow-diag-final-and",
+        #                     "-i",
+        #                     "{}/fast_align/forward.align".format(tmpdir),
+        #                     "-j",
+        #                     "{}/fast_align/reverse.align".format(tmpdir)
+        #                     ]
+        with open("{}/alignments".format(tmpdir), "w+") as stdout:
+            subprocess.run(subprocess_call, stdout=stdout)
+        logger.info("Generating Alignments Done")
+
+
+
+        with open("{}/alignments".format(tmpdir), "r") as f:
+            align_in = f.read().split("\n")
+
+        indices = [_ for _ in range(total_length)]
+        lang1_op = []
+        lang2_op = []
+        align_op = []
+
+        for index in indices:
+            lang1_op.append(lang1_in[index])
+            lang2_op.append(lang2_in[index])
+            align_op.append(align_in[index])
+
+        os.makedirs(output_loc, exist_ok=True)
+        with open(os.path.join(output_loc, lang1_op_file), "w+") as f:
+            f.write("\n".join(lang1_op))
+        with open(os.path.join(output_loc, lang2_op_file), "w+") as f:
+            f.write("\n".join(lang2_op))
+        with open(os.path.join(output_loc, align_op_file), "w+") as f:
+            f.write("\n".join(align_op))
+
+        # Writes PFMS file
+        write_pfms(indices, total_length, pfms_file, lang1_code, lang2_code)
 
 if __name__ == "__main__":
     # setup logging
@@ -116,6 +180,7 @@ if __name__ == "__main__":
     lang2_op_file = config_aligner["target_op_file"] if config_aligner["target_op_file"] else lang2_in_file
     pfms_file = config_aligner["pfms_file"]
     align_op_file = config_aligner["align_op_file"] if config_aligner["align_op_file"] else lang1_code + "-to-" + lang2_code + "-input_parallel_alignments"
+    aligner_type = config_aligner["aligner_type"] if config_aligner["aligner_type"] else "fast_align"
 
     # read data
     lang1_in, lang2_in = read_data(input_loc, lang1_in_file, lang2_in_file)
@@ -135,4 +200,9 @@ if __name__ == "__main__":
         exit()
 
     # Learn alignments on all sentences
-    fast_align(pfms_file, lang1_code, lang2_code, align_op_file, lang1_op_file, lang2_op_file)
+    if aligner_type == "fast_align":
+        fast_align(pfms_file, lang1_code, lang2_code, align_op_file, lang1_op_file, lang2_op_file)
+    elif aligner_type == "awesome_align":
+        awesome_align(pfms_file, lang1_code, lang2_code, align_op_file, lang1_op_file, lang2_op_file)
+    else:
+        logger.error("Invalid Aligner (Options: fast_align or awesome_align)")

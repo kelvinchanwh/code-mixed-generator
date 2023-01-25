@@ -49,7 +49,7 @@ def translate_batch(lang1_code, lang2_code, lang1_in, lang2_op_file, max_len=500
     
     for chunk in range(len(lang1_chunks)):
         batch = translate(translator, lang1_code, lang2_code, lang1_chunks[chunk])
-        logger.info("Translated %d/%d batches"%(chunk, len(lang1_chunks)))
+        logger.info("Translated %d/%d batches"%(chunk+1, len(lang1_chunks)))
 
         # Additional tokenization for CJK languages
         if "zh" in lang2_code:
