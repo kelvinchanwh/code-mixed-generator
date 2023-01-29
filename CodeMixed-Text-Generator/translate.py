@@ -4,6 +4,7 @@ import re
 import time
 import jieba
 import nagisa
+import time
 from konlpy.tag import Komoran
 
 
@@ -41,35 +42,49 @@ def divide_chunks(l, n):
         yield lang1_in[i:i+n]
 
 def translate_batch(lang1_code, lang2_code, lang1_in, lang2_op_file, max_len=500):
+    starttime = time.time()
     translations = list()
     translator = Translator()
 
-    lang1_chunks = list(divide_chunks(lang1_in, max_len))
+    batch_string = list()
+
+    string = lang1_in[0]
+    for v in lang1_in[1:]:
+        if (len(string) + len(' \n ') + len(v) <= 4800):
+            string = string + ' \n ' + v
+            if v == lang1_in[-1]:
+                batch_string.append(string)
+        else:
+            batch_string.append(string)
+            string = v
+
+    lang1_chunks = list(divide_chunks(batch_string, max_len))
     logger.info("Translating %d chunks"%(len(lang1_chunks)))
     
-    for chunk in range(len(lang1_chunks)):
-        batch = translate(translator, lang1_code, lang2_code, lang1_chunks[chunk])
-        logger.info("Translated %d/%d batches"%(chunk+1, len(lang1_chunks)))
-
-        # Additional tokenization for CJK languages
-        if "zh" in lang2_code:
-            batch = [list(filter(lambda a: a != " ", jieba.lcut(sentence.text))) for sentence in batch]
-        elif "ja" in lang2_code:
-            batch = [list(filter(lambda a: a != "\u3000", nagisa.tagging(sentence.text).words)) for sentence in batch]
-        elif "ko" in lang2_code:
-            tokenizer = Komoran()        
-            batch = [tokenizer.morphs(sentence.text) for sentence in batch]
-
-
-        translations.extend(batch)
-
-
-    assert len(lang1_in) == len(translations)
     os.makedirs(output_loc, exist_ok=True)
     with open(os.path.join(output_loc, lang2_op_file), "w+") as f:
-        for translation in translations:
-            # print (translation.text)
-            f.writelines(" ".join(translation) + "\n")
+        for chunk in range(len(lang1_chunks)):
+            batch = translate(translator, lang1_code, lang2_code, lang1_chunks[chunk])
+            translated_batch = [bat.text.split("\n")[0] for bat in batch]
+            timediff = time.time() - starttime
+            logger.info("Translated %d/%d batches. %.1f < %.1f"%(chunk+1, len(lang1_chunks), timediff, (len(lang1_chunks)/(chunk+1))*timediff))
+
+            # Additional tokenization for CJK languages
+            if "zh" in lang2_code:
+                batch = [list(filter(lambda a: a != " ", jieba.lcut(sentence))) for sentence in translated_batch]
+            elif "ja" in lang2_code:
+                batch = [list(filter(lambda a: a != "\u3000", nagisa.tagging(sentence).words)) for sentence in translated_batch]
+            elif "ko" in lang2_code:
+                tokenizer = Komoran()        
+                batch = [tokenizer.morphs(sentence) for sentence in translated_batch]
+
+            for translation in batch:
+                # print (translation.text)
+                f.writelines(" ".join(translation) + "\n")
+
+            translations.extend(batch)
+
+        assert len(lang1_in) == len(translations)
 
 if __name__ == "__main__":
 
@@ -95,6 +110,6 @@ if __name__ == "__main__":
         lang1_in[i] = clean_sentence(lang1_in[i])
     logger.info("Clean Data Complete")
 
-
+    
     # Learn alignments on all sentences
     translate_batch(lang1_code, lang2_code, lang1_in, lang2_op_file)
