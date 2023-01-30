@@ -10,6 +10,7 @@ from konlpy.tag import Komoran
 
 from configparser import ConfigParser
 from googletrans import Translator
+import multiprocessing as mp
 
 def get_config():
     config = ConfigParser()
@@ -26,26 +27,32 @@ def read_data(input_loc, lang1_in_file):
 def clean_sentence(sent):
     return re.sub(r"[()]", "", re.sub(r"\s+", " ", re.sub(r"([?!,.])", r" \1 ", sent))).strip()
 
-def translate(translator, lang1_code, lang2_code, lang1_in):
+def translate(lang1_code, lang2_code, lang1_in, lang1_counter):
+    translator = Translator()
     success = False
     while success == False:
         try:
-            translations = translator.translate(lang1_in, src=lang1_code, dest=lang2_code)
+            batch = translator.translate(lang1_in, src=lang1_code, dest=lang2_code)
             success = True
         except Exception as e:
             logger.error(e)
             time.sleep(10)
-    return translations
+
+    translated_batch = [bat.text.split("\n") for bat in batch]
+    translated_batch = [sent for line in translated_batch for sent in line]
+    timediff = time.time() - starttime
+    logger.info("Translated Batch %d. Elapsed time: %d sec"%(lang1_counter+1, timediff))
+
+    return translated_batch
 
 def divide_chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i+n]
 
 def translate_batch(lang1_code, lang2_code, lang1_in, lang2_op_file, max_len=500):
+    global starttime
     starttime = time.time()
     translations = list()
-    translator = Translator()
-
     batch_string = list()
 
     string = lang1_in[0]
@@ -63,28 +70,31 @@ def translate_batch(lang1_code, lang2_code, lang1_in, lang2_op_file, max_len=500
     
     os.makedirs(output_loc, exist_ok=True)
     with open(os.path.join(output_loc, lang2_op_file), "w+") as f:
-        for chunk in range(len(lang1_chunks)):
-            batch = translate(translator, lang1_code, lang2_code, lang1_chunks[chunk])
-            translated_batch = [bat.text.split("\n") for bat in batch]
-            translated_batch = [sent for line in translated_batch for sent in line]
-            timediff = time.time() - starttime
-            remaintime = ((len(lang1_chunks)/(chunk+1))*timediff) - timediff
-            logger.info("Translated %d/%d batches. %.2d:%2d < %.2d:%2d"%(chunk+1, len(lang1_chunks), timediff/60, timediff%60, remaintime/60, timediff%60))
+        # with concurrent.futures.ThreadPoolExecutor() as executor: # In this case thread would be better
+        #     batch = executor.map(translate, [lang1_code], [lang2_code], lang1_chunks, lang1_counter)
+            
+        pool = mp.Pool(mp.cpu_count())
+        batches = pool.starmap(translate, [(lang1_code, lang2_code, lang1_chunk, lang1_counter) for (lang1_counter, lang1_chunk) in enumerate(lang1_chunks)])
 
-            # Additional tokenization for CJK languages
-            if "zh" in lang2_code:
-                batch = [list(filter(lambda a: a != " ", jieba.lcut(sentence))) for sentence in translated_batch]
-            elif "ja" in lang2_code:
-                batch = [list(filter(lambda a: a != "\u3000", nagisa.tagging(sentence).words)) for sentence in translated_batch]
-            elif "ko" in lang2_code:
-                tokenizer = Komoran()        
-                batch = [tokenizer.morphs(sentence) for sentence in translated_batch]
+        translations = [sent for batch in batches for sent in batch]
 
-            for translation in batch:
-                # print (translation.text)
-                f.writelines(" ".join(translation) + "\n")
+        translatetime = time.time()-starttime
+        print("Total Translate Time: %d"%(translatetime))
 
-            translations.extend(batch)
+        # Additional tokenization for CJK languages
+        if "zh" in lang2_code:
+            translations = [list(filter(lambda a: a != " ", jieba.lcut(sentence))) for sentence in translations]
+        elif "ja" in lang2_code:
+            translations = [list(filter(lambda a: a != "\u3000", nagisa.tagging(sentence).words)) for sentence in translations]
+        elif "ko" in lang2_code:
+            tokenizer = Komoran()        
+            translations = [tokenizer.morphs(sentence) for sentence in translations]   
+
+        for translation in translations:
+            # print (translation.text)
+            f.writelines(" ".join(translation) + "\n")
+
+        print("Total Tokenization Time: %d"%(time.time()-translatetime-starttime))
 
         assert len(lang1_in) == len(translations), "Input length (%d) does not match output length (%d)"%(len(lang1_in), len(translations))
 
