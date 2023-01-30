@@ -78,7 +78,9 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, 
                 p.join(t)
                 ret = 'fail'
                 if p.exitcode is not None and p.exitcode >= 0:
-                    ret = dest.recv()
+                    recv = dest.recv()
+                    data = recv[0]
+                    ret = recv[1]
                 dest.close()
                 p.terminate()
 
@@ -98,7 +100,7 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, 
 
                         if len(ret) >= k:
                             ret = ret[:k]
-
+                    ret = [cs + (data.sentence_1, data.sentence_2, data.alignment) for cs in ret]
                     # final generated cm to be added for each input sentence pair
                     outputs.append(ret)
     return outputs
@@ -185,7 +187,7 @@ if __name__ == "__main__":
     finaloutput = ""
     for i in outputs:
         for j in i:
-            finaloutput += "[CM]" + j[0] + "\n[TREE]" + j[1] + "\n"
+            finaloutput += "[CM]" + j[0] + "\n[TREE]" + j[1] + "\n[SENT1]" + j[2] + "\n[SENT2]" + j[3] + "\n[ALIGN]" + j[4] + "\n"
     outfile = '{}/out-cm-{}-{}.txt'.format(outdir, source_lang, target_lang)
     with open(outfile, 'w+') as f:
         f.write(finaloutput)

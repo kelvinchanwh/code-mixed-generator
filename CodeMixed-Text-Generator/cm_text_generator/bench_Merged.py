@@ -204,6 +204,7 @@ def main(combined_data):
     mySentencePair.root_1 = root_1
     mySentencePair.root_2 = root_2
     mySentencePair.grammar = grammar
+    mySentencePair.alignment = data[4]
 
     if linguistic_theory == 'ec':
         # define model for lattice building
@@ -240,7 +241,7 @@ def main(combined_data):
                     continue
             # all_CM_sentences_sorted = [(a, '(ROOT{})'.format(b)) for (a,b) in all_CM_sentences_sorted]
         # all_CM_sentences_sorted = ['{}\t{}'.format(s[0], s[1])  for s in all_CM_sentences_sorted]
-        return final_strings
+        return mySentencePair, final_strings
 
 
     elif linguistic_theory == 'ml':
@@ -261,13 +262,13 @@ def main(combined_data):
         
         all_CM_sentences_sorted = sorted(list(all_CM_sentences))
         
-        return all_CM_sentences_sorted
+        return mySentencePair, all_CM_sentences_sorted
 
 if __name__ == "__main__":
     # sys.setprofile(tracefunc)
     with open(sys.argv[1], 'r') as f:
         data = f.read().split('\n')
-    res = main(data)
+    mySentencePair, res = main(data)
     res = ['{}\t{}'.format(s[0], s[1]) for s in res]
     gcm_output = '\n'.join(res) 
     with open(sys.argv[2], 'w+') as f:
