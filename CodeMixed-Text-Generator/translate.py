@@ -39,7 +39,7 @@ def translate(translator, lang1_code, lang2_code, lang1_in):
 
 def divide_chunks(l, n):
     for i in range(0, len(l), n):
-        yield lang1_in[i:i+n]
+        yield l[i:i+n]
 
 def translate_batch(lang1_code, lang2_code, lang1_in, lang2_op_file, max_len=500):
     starttime = time.time()
@@ -65,9 +65,11 @@ def translate_batch(lang1_code, lang2_code, lang1_in, lang2_op_file, max_len=500
     with open(os.path.join(output_loc, lang2_op_file), "w+") as f:
         for chunk in range(len(lang1_chunks)):
             batch = translate(translator, lang1_code, lang2_code, lang1_chunks[chunk])
-            translated_batch = [bat.text.split("\n")[0] for bat in batch]
+            translated_batch = [bat.text.split(" \n ") for bat in batch]
+            translated_batch = [sent for line in translated_batch for sent in line]
             timediff = time.time() - starttime
-            logger.info("Translated %d/%d batches. %.1f < %.1f"%(chunk+1, len(lang1_chunks), timediff, (len(lang1_chunks)/(chunk+1))*timediff))
+            remaintime = (len(lang1_chunks)/(chunk+1))*timediff
+            logger.info("Translated %d/%d batches. %.2d:%2d < %.2d:%2d"%(chunk+1, len(lang1_chunks), timediff/60, timediff%60, remaintime/60, timediff%60))
 
             # Additional tokenization for CJK languages
             if "zh" in lang2_code:
