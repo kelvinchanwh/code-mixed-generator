@@ -65,10 +65,10 @@ def translate_batch(lang1_code, lang2_code, lang1_in, lang2_op_file, max_len=500
     with open(os.path.join(output_loc, lang2_op_file), "w+") as f:
         for chunk in range(len(lang1_chunks)):
             batch = translate(translator, lang1_code, lang2_code, lang1_chunks[chunk])
-            translated_batch = [bat.text.split(" \n ") for bat in batch]
+            translated_batch = [bat.text.split("\n") for bat in batch]
             translated_batch = [sent for line in translated_batch for sent in line]
             timediff = time.time() - starttime
-            remaintime = (len(lang1_chunks)/(chunk+1))*timediff
+            remaintime = ((len(lang1_chunks)/(chunk+1))*timediff) - timediff
             logger.info("Translated %d/%d batches. %.2d:%2d < %.2d:%2d"%(chunk+1, len(lang1_chunks), timediff/60, timediff%60, remaintime/60, timediff%60))
 
             # Additional tokenization for CJK languages
@@ -86,7 +86,7 @@ def translate_batch(lang1_code, lang2_code, lang1_in, lang2_op_file, max_len=500
 
             translations.extend(batch)
 
-        assert len(lang1_in) == len(translations)
+        assert len(lang1_in) == len(translations), "Input length (%d) does not match output length (%d)"%(len(lang1_in), len(translations))
 
 if __name__ == "__main__":
 
