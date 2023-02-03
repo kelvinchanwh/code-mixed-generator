@@ -77,7 +77,7 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, 
                 t = 10
                 p.join(t)
                 ret = 'fail'
-                if p.exitcode is not None and p.exitcode >= 0:
+                if p.exitcode is None or p.exitcode >= 0:
                     recv = dest.recv()
                     data = recv[0]
                     ret = recv[1]

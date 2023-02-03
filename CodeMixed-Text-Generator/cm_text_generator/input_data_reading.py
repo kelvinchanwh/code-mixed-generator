@@ -62,12 +62,12 @@ def prepareData(data):
         engInd = int(align[dashindex+1:])
         if engInd >= len(engTokenList):
             print(
-                str(engInd) + " : index exceeds length of english sentence, " + len(engTokenList))
+                str(engInd) + " : index exceeds length of english sentence, " + str(len(engTokenList)))
         else:
             engTokenList[engInd].alignments.append(hinInd)
         if hinInd >= len(hinTokenList):
             print(
-                str(hinInd) + " : index exceeds length of hindi sentence, " + len(hinTokenList))
+                str(hinInd) + " : index exceeds length of hindi sentence, " + str(len(hinTokenList)))
         else:
             hinTokenList[hinInd].alignments.append(engInd)
 

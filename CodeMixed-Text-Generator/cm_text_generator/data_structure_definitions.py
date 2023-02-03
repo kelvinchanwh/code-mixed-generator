@@ -227,10 +227,10 @@ class dfa(object):
                 self.transition_ops[(k[0] + self.nextIndex, k[1])] = copy.copy(v1)
 
         elif linguistic_theory == 'ml':
-            for (k, v) in other.transitions.items():
+            for (k, v) in list(other.transitions.items()):
                 self.transitions[(k[0] + self.nextIndex, k[1])
                                 ] = int(v) + self.nextIndex
-            for (k1, v1) in other.transition_ops.items():
+            for (k1, v1) in list(other.transition_ops.items()):
                 self.transition_ops[(k[0] + self.nextIndex, k[1])] = copy.copy(v1)
 
 
