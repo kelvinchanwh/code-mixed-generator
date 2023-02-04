@@ -39,7 +39,7 @@ def lang_tag(gcm_raw_output, parse_string_src, source_lang, target_lang):
     
     for i in gcm_raw_output:
         string, parse_string_cm = i[0], i[1]
-        tokens = string.split()
+        tokens = string.split("|||")
         parse_tree = nltk.tree.Tree.fromstring(parse_string_src)
         leaves = parse_tree.leaves()
         tagged_tokens = []
@@ -48,7 +48,7 @@ def lang_tag(gcm_raw_output, parse_string_src, source_lang, target_lang):
                 tagged_tokens.append('{}/{}'.format(token, target_lang))
             else:
                 tagged_tokens.append('{}/{}'.format(token, source_lang))
-        tagged_strings.append((' '.join(tagged_tokens), parse_string_cm))
+        tagged_strings.append(('|||'.join(tagged_tokens), parse_string_cm))
     return tagged_strings
 
 def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, lang1_code, lang2_code, rcm_file, linguistic_theory):
@@ -187,7 +187,7 @@ if __name__ == "__main__":
     finaloutput = ""
     for i in outputs:
         for j in i:
-            finaloutput += "[CM]" + j[0] + "\n[TREE]" + j[1] + "\n[SENT1]" + j[2] + "\n[SENT2]" + j[3] + "\n[ALIGN]" + j[4] + "\n"
+            finaloutput += "\n[SENT1]" + j[2] + "\n[SENT2]" + j[3] + "\n[ALIGN]" + j[4] + "\n[CM]" + j[0] + "\n[TREE]" + j[1] + "\n"
     outfile = '{}/out-cm-{}-{}.txt'.format(outdir, source_lang, target_lang)
     with open(outfile, 'w+') as f:
         f.write(finaloutput)

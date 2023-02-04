@@ -16,7 +16,7 @@ def rank(gcm, langtags, spf_mean, spf_std):
 
     # convert gcm to the format which switchpoint_u expects (3d array)
     for cm, _ in gcm:
-        t = cm.split()
+        t = cm.split("|||")
         tmp = []
         for w in t:
             tmp.append(w.split('/'))

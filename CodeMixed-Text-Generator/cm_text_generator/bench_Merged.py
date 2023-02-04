@@ -107,7 +107,7 @@ def generateAllSentencesEC(doof, currState, currString, parseString, stack):
                     new_stack.append("(")
                     new_parseString += " ({}".format(op[1])
             generateAllSentencesEC(
-                doof, new_State, currString+' '+possibleTransitions[i][0][:-2], new_parseString, new_stack)
+                doof, new_State, currString+'|||'+possibleTransitions[i][0][:-2], new_parseString, new_stack)
     else:
         all_CM_sentences.add((currString.strip(), parseString))
 
@@ -123,7 +123,7 @@ def generateAllSentencesML(doof, currState, currString, parseString, stack):
         for i in range(len(possibleTransitions)):
             new_State = possibleTransitions[i][1]
             generateAllSentencesML(
-                doof, new_State, currString+' '+possibleTransitions[i][0][:-2], '', [])
+                doof, new_State, currString+'|||'+possibleTransitions[i][0][:-2], '', [])
     else:
         all_CM_sentences.add((currString.strip(), ''))
 

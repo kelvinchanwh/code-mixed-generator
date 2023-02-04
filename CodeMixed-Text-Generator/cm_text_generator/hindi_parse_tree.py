@@ -43,6 +43,7 @@ def projectHindiTree(hinTokenList, engTokenList):
         else:
           if engTokenList[curr.finalAlignment].parent==lastOneOut:
             curr.label=engTokenList[curr.finalAlignment].label
+            curr.token=engTokenList[curr.finalAlignment].token + "\\" + curr.token
             newElem.addIndexedChild(curr)
             curr.parent=newElem
       hinTreeList.append(newElem)
