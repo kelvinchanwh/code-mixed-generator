@@ -123,6 +123,8 @@ if __name__ == "__main__":
         lang1_in[i] = clean_sentence(lang1_in[i])
     logger.info("Clean Data Complete")
 
+    # Remove empty lines
+    lang1_in = [sent for sent in lang1_in if sent != ""]
     
     # Learn alignments on all sentences
     translate_batch(lang1_code, lang2_code, lang1_in, lang2_op_file)
