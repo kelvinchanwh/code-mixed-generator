@@ -26,7 +26,7 @@ def read_data(input_loc, lang1_in_file, lang2_in_file):
 def clean_sentence(sent):
     return re.sub(r"[()]", "", re.sub(r"\s+", " ", re.sub(r"([?!,.])", r" \1 ", sent))).strip()
 
-def write_pfms(indices, total_length, pfms_file, lang1_code, lang2_code):
+def write_pfms(indices, total_length, pfms_file, output_pfms_file):
     if not pfms_file:
         pfms_scores = ["0.0" for _ in range(total_length)]
     else:
@@ -36,11 +36,10 @@ def write_pfms(indices, total_length, pfms_file, lang1_code, lang2_code):
         for index in indices:
             pfms_scores.append(lines[index])
 
-    pfms_file = lang1_code + "-to-" + lang2_code + "_pfms.txt"
-    with open(os.path.join(output_loc, pfms_file), "w+") as f:
+    with open(os.path.join(output_loc, output_pfms_file), "w+") as f:
         f.write("\n".join(pfms_scores))
 
-def fast_align(pfms_file, lang1_code, lang2_code, align_op_file, lang1_op_file, lang2_op_file):
+def fast_align(pfms_file, lang1_code, lang2_code, align_op_file, output_pfms_file, lang1_op_file, lang2_op_file):
     total_length = len(lang1_in)
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -97,9 +96,9 @@ def fast_align(pfms_file, lang1_code, lang2_code, align_op_file, lang1_op_file, 
             f.write("\n".join(align_op))
 
         # Writes PFMS file
-        write_pfms(indices, total_length, pfms_file, lang1_code, lang2_code)
+        write_pfms(indices, total_length, pfms_file, output_pfms_file)
     
-def awesome_align(pfms_file, lang1_code, lang2_code, align_op_file, lang1_op_file, lang2_op_file):
+def awesome_align(pfms_file, lang1_code, lang2_code, align_op_file, output_pfms_file, lang1_op_file, lang2_op_file):
     total_length = len(lang1_in)
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -161,7 +160,7 @@ def awesome_align(pfms_file, lang1_code, lang2_code, align_op_file, lang1_op_fil
             f.write("\n".join(align_op))
 
         # Writes PFMS file
-        write_pfms(indices, total_length, pfms_file, lang1_code, lang2_code)
+        write_pfms(indices, total_length, pfms_file, output_pfms_file)
 
 if __name__ == "__main__":
     # setup logging
@@ -180,6 +179,7 @@ if __name__ == "__main__":
     lang1_op_file = config_aligner["source_op_file"] if config_aligner["source_op_file"] else lang1_in_file
     lang2_op_file = config_aligner["target_op_file"] if config_aligner["target_op_file"] else lang2_in_file
     pfms_file = config_aligner["pfms_file"]
+    output_pfms_file = config_aligner["output_pfms_file"] if config_aligner["target_inp_file"] else lang1_code + "-to-" + lang2_code + "_pfms.txt"
     align_op_file = config_aligner["align_op_file"] if config_aligner["align_op_file"] else lang1_code + "-to-" + lang2_code + "-input_parallel_alignments"
     aligner_type = config_aligner["aligner_type"] if config_aligner["aligner_type"] else "fast_align"
 
@@ -202,8 +202,8 @@ if __name__ == "__main__":
 
     # Learn alignments on all sentences
     if aligner_type == "fast_align":
-        fast_align(pfms_file, lang1_code, lang2_code, align_op_file, lang1_op_file, lang2_op_file)
+        fast_align(pfms_file, lang1_code, lang2_code, align_op_file, output_pfms_file, lang1_op_file, lang2_op_file)
     elif aligner_type == "awesome_align":
-        awesome_align(pfms_file, lang1_code, lang2_code, align_op_file, lang1_op_file, lang2_op_file)
+        awesome_align(pfms_file, lang1_code, lang2_code, align_op_file, output_pfms_file, lang1_op_file, lang2_op_file)
     else:
         logger.error("Invalid Aligner (Options: fast_align or awesome_align)")
