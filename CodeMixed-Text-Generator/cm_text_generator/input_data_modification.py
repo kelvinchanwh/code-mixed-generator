@@ -65,7 +65,7 @@ def glueHindiPhrases(hinTokenList):
       jt=0
       while jt<len(hinTokenList[i+1].alignments) and continueFlag==False:
         if hinTokenList[i].alignments[it]==hinTokenList[i+1].alignments[jt]:
-          hinTokenList[i].token=hinTokenList[i].token+" "+hinTokenList[i+1].token
+          hinTokenList[i].token=hinTokenList[i].token+hinTokenList[i+1].token
           hinTokenList[i].alignments=hinTokenList[i].alignments+ list(set(hinTokenList[i+1].alignments)-set(hinTokenList[i].alignments))
           hinTokenList[i+1].token="XX"
           continueFlag=True
