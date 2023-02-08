@@ -1,6 +1,7 @@
 import os
 import logging
 import re
+import sys
 import time
 import jieba
 import nagisa
@@ -12,9 +13,9 @@ from configparser import ConfigParser
 from googletrans import Translator
 import multiprocessing as mp
 
-def get_config():
+def get_config(config_path):
     config = ConfigParser()
-    config.read("config.ini")
+    config.read(config_path)
     config_general = config["GENERAL"]
     config_translate = config["TRANSLATE"]
     return config_general, config_translate
@@ -103,7 +104,7 @@ if __name__ == "__main__":
     # setup logging
     logger = logging.getLogger(__name__)
     # setup file paths using config file
-    config_general, config_translate = get_config()
+    config_general, config_translate = get_config(sys.argv[1])
     lang1 = config_translate["language_1"] if config_translate["language_1"] else "EN"
     lang1_code = lang1.lower()
     lang2 = config_translate["language_2"] if config_translate["language_2"] else "ZH-TW"

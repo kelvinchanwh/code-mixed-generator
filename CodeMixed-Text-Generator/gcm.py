@@ -15,9 +15,9 @@ from utils import rcm_std_mean, spf_sampling
 
 open_file = functools.partial(open, encoding='utf-8')
 
-def get_config():
+def get_config(config_path):
     config = ConfigParser()
-    config.read("config.ini")
+    config.read(config_path)
     config_pregcm = config["PREGCM"]
     config_gcm = config["GCM"]
     config_general = config["GENERAL"]
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     logger = logging.getLogger(__name__)
 
     # setup file paths using config file
-    config_pregcm, config_gcm, config_general, config_output = get_config()
+    config_pregcm, config_gcm, config_general, config_output = get_config(sys.argv[1])
     lang1 = config_general["language_1"] if config_general["language_1"] else "EN"
     lang1_code = lang1.lower()[:2]
     lang2 = config_general["language_2"] if config_general["language_2"] else "ZH-TW"

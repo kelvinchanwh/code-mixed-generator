@@ -3,14 +3,15 @@ import logging
 import tempfile
 import subprocess
 import re
+import sys
 
 from configparser import ConfigParser
 
 import numpy as np
 
-def get_config():
+def get_config(config_path):
     config = ConfigParser()
-    config.read("config.ini")
+    config.read(config_path)
     config_aligner = config["ALIGNER"]
     config_general = config["GENERAL"]
     return config_general, config_aligner
@@ -167,7 +168,7 @@ if __name__ == "__main__":
     logger = logging.getLogger(__name__)
 
     # setup file paths using config file
-    config_general, config_aligner = get_config()
+    config_general, config_aligner = get_config(sys.argv[1])
     lang1 = config_general["language_1"] if config_general["language_1"] else "EN"
     lang1_code = lang1.lower()[:2]
     lang2 = config_general["language_2"] if config_general["language_2"] else "ZH-TW"

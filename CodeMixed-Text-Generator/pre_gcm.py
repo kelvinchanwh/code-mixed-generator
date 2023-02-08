@@ -16,9 +16,9 @@ if os.name == "nt":
     os.environ["JAVA_HOME"] = "C:\\Program Files\\Java\\jdk1.8.0_221\\"
     # os.environ["PYTHONIOENCODING"] = "utf8"
 
-def get_config():
+def get_config(config_path):
     config = ConfigParser()
-    config.read("config.ini")
+    config.read(config_path)
     config_aligner = config["ALIGNER"]
     config_pregcm = config["PREGCM"]
     config_general = config["GENERAL"]
@@ -99,7 +99,7 @@ def main(parsed_sentences = None):
     logger = logging.getLogger(__name__)
 
     # setup file paths using config file
-    config_aligner, config_pregcm, config_general = get_config()
+    config_aligner, config_pregcm, config_general = get_config(sys.argv[1])
     lang1 = config_general["language_1"] if config_general["language_1"] else "EN"
     lang1_code = lang1.lower()[:2]
     lang2 = config_general["language_2"] if config_general["language_2"] else "ZH"

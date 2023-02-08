@@ -1,4 +1,5 @@
 import os, subprocess
+import sys
 from configparser import ConfigParser
 
 # adding module search path so that main modules can be imported
@@ -6,9 +7,9 @@ LIBR_DIR = os.getcwd()
 BASE_DIR = LIBR_DIR.split('library')[0]
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
-def get_config():
+def get_config(config_path):
     config = ConfigParser()
-    config.read(os.path.join(BASE_DIR, "config.ini"))
+    config.read(os.path.join(BASE_DIR, config_path))
     config_general = config["GENERAL"]
     config_pregcm = config["PREGCM"]
     config_gcm = config["GCM"]
@@ -31,7 +32,7 @@ def setup_gcm(processed_corpus, block, total_size, lang1_code, lang2_code, pregc
                 f.write("\n\n".join(out_string))
 
 def gen(processed_corpus):
-    config_general, config_pregcm, config_gcm = get_config()
+    config_general, config_pregcm, config_gcm = get_config(sys.argv[1])
     lang1 = config_general["language_1"] if config_general["language_1"] else "HINDI"
     lang1_code = lang1.lower()[:2]
     lang2 = config_general["language_2"] if config_general["language_2"] else "ENGLISH"

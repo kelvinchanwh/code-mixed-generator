@@ -11,16 +11,16 @@ sys.path.insert(0, BASE_DIR)
 
 import pre_gcm
 
-def get_config():
+def get_config(config_path):
     config = ConfigParser()
-    config.read(os.path.join(BASE_DIR, "config.ini"))
+    config.read(os.path.join(BASE_DIR, config_path))
     config_aligner = config["ALIGNER"]
     config_general = config["GENERAL"]
     config_pregcm = config["PREGCM"]
     return config_aligner, config_pregcm, config_general
 
 def setup_pregcm(corpus, aligns, pfms):
-    config_aligner, config_pregcm, config_general = get_config()
+    config_aligner, config_pregcm, config_general = get_config(sys.argv[1])
     lang1 = config_general["language_1"] if config_general["language_1"] else "HINDI"
     lang1_code = lang1.lower()[:2]
     lang2 = config_general["language_2"] if config_general["language_2"] else "ENGLISH"

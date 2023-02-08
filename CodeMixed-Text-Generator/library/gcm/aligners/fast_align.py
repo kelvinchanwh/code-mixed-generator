@@ -1,11 +1,12 @@
 import os, subprocess
+import sys
 from configparser import ConfigParser
 
 BASE_DIR = os.getcwd().split('library')[0]
 
-def get_config():
+def get_config(config_path):
     config = ConfigParser()
-    config.read(os.path.join(BASE_DIR, "config.ini"))
+    config.read(os.path.join(BASE_DIR, config_path))
     config_aligner = config["ALIGNER"]
     config_general = config["GENERAL"]
     return config_general, config_aligner
@@ -20,7 +21,7 @@ def write_to_file(lang1_sents, lang1_in_file, lang2_sents, lang2_in_file):
 
 def gen_aligns(corpus):
     # setup file paths using config file
-    config_general, config_aligner = get_config()
+    config_general, config_aligner = get_config(sys.argv[1])
     # get file names
     lang1 = config_general["language_1"] if config_general["language_1"] else "HINDI"
     lang1_code = lang1.lower()[:2]
