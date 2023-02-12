@@ -262,7 +262,7 @@ def main(combined_data):
         
         all_CM_sentences_sorted = sorted(list(all_CM_sentences))
         
-        return mySentencePair, all_CM_sentences_sorted
+        return final_strings, mySentencePair.sentence_1, mySentencePair.sentence_2, mySentencePair.alignment
 
 if __name__ == "__main__":
     # sys.setprofile(tracefunc)
