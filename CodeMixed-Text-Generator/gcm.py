@@ -28,6 +28,7 @@ def run_in_try(func, pipe, params):
     try:
         ret = func(params)
     except Exception as e:
+        print (e)
         ret = "fail"
     pipe.send(ret)
     pipe.close()
