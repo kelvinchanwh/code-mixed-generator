@@ -174,7 +174,7 @@ class dfa(object):
                     self.transition_ops[k1] = copy.copy(v1)
 
         elif linguistic_theory == 'ml':
-            for (k, v) in self.transitions.items():
+            for (k, v) in list(self.transitions.items()):
                 if k[0] in others:
                     self.transitions.pop(k)
                     if ((s1, k[1]) in self.transitions) or v == s1:
@@ -192,7 +192,7 @@ class dfa(object):
                         return
                     self.transitions[k] = s1
 
-            for (k1, v1) in self.transition_ops.items():
+            for (k1, v1) in list(self.transition_ops.items()):
                 if k[0] in others:
                         self.transition_ops.pop(k1)
                         if ((s1, k[1]) in self.transitions) or v == s1:
@@ -387,7 +387,7 @@ class node(object):
         if self.language == '':
             return self.label
         else:
-            return "{}:{}_{}".format(self.label, self.token, 'e' if self.language is 'English' else 'h')
+            return "{}:{}_{}".format(self.label, self.token, 'e' if self.language == 'English' else 'h')
 
 
 class grammarPoint(object):
