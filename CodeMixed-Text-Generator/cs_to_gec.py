@@ -172,11 +172,6 @@ def align_cs_to_m2(cs_words, cs_list, m2_words):
 
 
 #%%
-m2 = parse_m2("data/corpus/sample_set/sample_m2_en.m2")
-cs = parse_cs("data/zh-to-en-gcm/out-cm-ch-en.txt")
-
-
-#%%
 
 def main():
 	input_cs_corr_path = sys.argv[1]
