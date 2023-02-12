@@ -241,7 +241,7 @@ def main(combined_data):
                     continue
             # all_CM_sentences_sorted = [(a, '(ROOT{})'.format(b)) for (a,b) in all_CM_sentences_sorted]
         # all_CM_sentences_sorted = ['{}\t{}'.format(s[0], s[1])  for s in all_CM_sentences_sorted]
-        return mySentencePair, final_strings
+        return final_strings, mySentencePair.sentence_1, mySentencePair.sentence_2, mySentencePair.alignment
 
 
     elif linguistic_theory == 'ml':

@@ -79,8 +79,10 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, 
                 ret = 'fail'
                 if p.exitcode is None or p.exitcode >= 0:
                     recv = dest.recv()
-                    data = recv[0]
-                    ret = recv[1]
+                    ret = recv[0]
+                    sentence_1 = recv[1]
+                    sentence_2 = recv[2]
+                    alignment = recv[3]
                 dest.close()
                 p.terminate()
 
@@ -100,7 +102,7 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, 
 
                         if len(ret) >= k:
                             ret = ret[:k]
-                    ret = [cs + (data.sentence_1, data.sentence_2, data.alignment) for cs in ret]
+                    ret = [cs + (sentence_1, sentence_2, alignment) for cs in ret]
                     # final generated cm to be added for each input sentence pair
                     outputs.append(ret)
     return outputs
