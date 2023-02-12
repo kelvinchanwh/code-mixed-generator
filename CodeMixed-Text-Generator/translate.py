@@ -128,3 +128,8 @@ if __name__ == "__main__":
     
     # Learn alignments on all sentences
     translate_batch(lang1_code, lang2_code, lang1_in, lang2_op_file)
+
+    with open(os.path.join(output_loc, lang1_in_file), "w+") as in_f:
+        for sent in lang1_in:
+            # print (translation.text)
+            in_f.writelines(sent + "\n")
