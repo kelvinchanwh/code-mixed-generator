@@ -262,13 +262,13 @@ def main(combined_data):
         
         all_CM_sentences_sorted = sorted(list(all_CM_sentences))
         
-        return final_strings, mySentencePair.sentence_1, mySentencePair.sentence_2, mySentencePair.alignment
+        return all_CM_sentences_sorted, mySentencePair.sentence_1, mySentencePair.sentence_2, mySentencePair.alignment
 
 if __name__ == "__main__":
     # sys.setprofile(tracefunc)
     with open(sys.argv[1], 'r') as f:
         data = f.read().split('\n')
-    mySentencePair, res = main(data)
+    res, _ = main(data)
     res = ['{}\t{}'.format(s[0], s[1]) for s in res]
     gcm_output = '\n'.join(res) 
     with open(sys.argv[2], 'w+') as f:
