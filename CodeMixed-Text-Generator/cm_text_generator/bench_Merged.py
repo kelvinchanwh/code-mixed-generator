@@ -241,7 +241,7 @@ def main(combined_data):
                     continue
             # all_CM_sentences_sorted = [(a, '(ROOT{})'.format(b)) for (a,b) in all_CM_sentences_sorted]
         # all_CM_sentences_sorted = ['{}\t{}'.format(s[0], s[1])  for s in all_CM_sentences_sorted]
-        return final_strings, mySentencePair.sentence_1, mySentencePair.sentence_2, mySentencePair.alignment
+        return final_strings, sentence_1, sentence_2, data[4]
 
 
     elif linguistic_theory == 'ml':
@@ -262,7 +262,7 @@ def main(combined_data):
         
         all_CM_sentences_sorted = sorted(list(all_CM_sentences))
         
-        return all_CM_sentences_sorted, mySentencePair.sentence_1, mySentencePair.sentence_2, mySentencePair.alignment
+        return all_CM_sentences_sorted, sentence_1, sentence_2, data[4]
 
 if __name__ == "__main__":
     # sys.setprofile(tracefunc)
