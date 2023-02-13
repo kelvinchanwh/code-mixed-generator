@@ -9,6 +9,7 @@ import tempfile
 import random
 import functools
 import nltk
+import subprocess
 
 from configparser import ConfigParser
 from utils import rcm_std_mean, spf_sampling 
@@ -75,7 +76,7 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, 
                 p = multiprocessing.Process(target=run_in_try, args=(
                     cm_text_generator.bench_Merged.main, source, arguments,))
                 p.start()
-                t = 10
+                t = 300
                 p.join(t)
                 ret = 'fail'
                 if p.exitcode is None or p.exitcode >= 0:
@@ -138,6 +139,7 @@ if __name__ == "__main__":
     lid_output = int(config_output["lid_output"]) if config_output["lid_output"] else 0
     sampling = config_output["sampling"] if config_output["sampling"] else "random"
     rcm_file = config_output["rcm_file"] if config_output["rcm_file"] else "rcm_lang_tagged.txt"
+    num_procs = int(config_gcm["num_procs"]) if config_gcm["num_procs"] else 1
 
     # for spf sampling, lid tags are required in the output
     if sampling == "spf":
@@ -166,29 +168,52 @@ if __name__ == "__main__":
         end = int(f.read())
     outputs = []
 
-    # iterate over all the files of a block and start the generation process
-    for value in range(0, end, block):
-        while not os.path.exists("{}/flag-cm-{}-{}-{}.txt".format(inputdir, source_lang, target_lang, value)):
-            logger.info("Waiting for file starting at {}".format(value))
-            time.sleep(30)
-        arguments = ['{}/input-cm-{}-{}-{}.txt'.format(inputdir, source_lang, target_lang, value),
-                '{}/out-cm-{}-{}-{}.txt'.format(outdir,
-                                                source_lang, target_lang, value),
-                source_lang,
-                target_lang,
-                k,
-                lid_output,
-                sampling,
-                lang1_code,
-                lang2_code,
-                rcm_file,
-                linguistic_theory,
-                ]
-        logger.info("Generating for {} to {}".format(
-            value, min(end, value + block)))
+    inputs = list(range(0, end, 500))
+    procs = [inputs[n:n+num_procs] for n in range(0, len(inputs), num_procs)]
 
-        # calling the generation code
-        outputs.extend(run_sh(*arguments))
+    for j in range(len(procs)):
+        gcm_procs = []
+        # iterate over all the files of a block and start the generation process
+        for value in procs[j]:
+            counter = 0
+            while not os.path.exists("{}/flag-cm-{}-{}-{}.txt".format(inputdir, source_lang, target_lang, value)):
+                logger.info("Waiting for file starting at {}".format(value))
+                time.sleep(30)
+                counter += 1
+                if counter >10:
+                    print ("Timeout waiting for file")
+                    raise TimeoutError
+            arguments = ['{}/input-cm-{}-{}-{}.txt'.format(inputdir, source_lang, target_lang, value),
+                    '{}/out-cm-{}-{}-{}.txt'.format(outdir,
+                                                    source_lang, target_lang, value),
+                    source_lang,
+                    target_lang,
+                    k,
+                    lid_output,
+                    sampling,
+                    lang1_code,
+                    lang2_code,
+                    rcm_file,
+                    linguistic_theory,
+                    ]
+            logger.info("Generating for {} to {}".format(
+                value, min(end, value + block)))
+
+
+            process = multiprocessing.Process(target=run_sh, args=arguments)
+            process.start()
+            gcm_procs.append(process)
+
+        # Waits for process completion
+        # Kills all processes if a KeyboardInterrupt is recieved
+        try:
+            for p in gcm_procs:
+                p.join()
+
+        except KeyboardInterrupt:
+            for p in gcm_procs:
+                p.kill()   
+
     # writing the generations to the output file
     finaloutput = ""
     for i in outputs:
