@@ -12,7 +12,7 @@ import nltk
 import subprocess
 
 from configparser import ConfigParser
-from utils import rcm_std_mean, spf_sampling 
+from utils import rcm_std_mean, spf_sampling, frac_std_mean, frac_sampling
 
 open_file = functools.partial(open, encoding='utf-8')
 
@@ -29,6 +29,7 @@ def run_in_try(func, pipe, params):
     try:
         ret = func(params)
     except Exception as e:
+        print ("ERROR")
         print (e)
         ret = "fail"
     pipe.send(ret)
@@ -112,6 +113,12 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, 
 
                         if len(ret) >= k:
                             ret = ret[:k]
+                    elif sampling == 'frac':
+                        langtags = [lang1_code.upper(), lang2_code.upper()]
+
+                        frac_mean, frac_std = frac_std_mean.main(rcm_file, langtags)
+                        ret = frac_sampling.rank(ret, langtags, frac_mean, frac_std)
+
                     ret = [cs + (sentence_1, sentence_2, alignment) for cs in ret]
                     # final generated cm to be added for each input sentence pair
                     outputs.append(ret)
