@@ -231,11 +231,12 @@ if __name__ == "__main__":
                 p.kill()   
 
     # writing the generations to the output file
-    # finaloutput = ""
-    # for i in outputs:
-    #     for j in i:
-    #         finaloutput += "\n[SENT1]" + j[2] + "\n[SENT2]" + j[3] + "\n[ALIGN]" + j[4] + "\n[CM]" + j[0] + "\n[TREE]" + j[1] + "\n"
-    # outfile = '{}/out-cm-{}-{}.txt'.format(outdir, source_lang, target_lang)
-    # with open(outfile, 'w+') as f:
-    #     f.write(finaloutput)
+    outfile_path = '{}/out-cm-{}-{}.txt'.format(outdir, source_lang, target_lang)
+    with open(outfile_path, 'w+') as outfile:
+        for value in inputs:
+            fname = '{}/out-cm-{}-{}-{}.txt'.format(outdir, source_lang, target_lang, value)
+            with open(fname) as infile:
+                for line in infile:
+                    outfile.write(line)
+
     logger.info("Sentence Generation Done")
