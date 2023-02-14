@@ -147,7 +147,8 @@ if __name__ == "__main__":
     lid_output = int(config_output["lid_output"]) if config_output["lid_output"] else 0
     sampling = config_output["sampling"] if config_output["sampling"] else "random"
     rcm_file = config_output["rcm_file"] if config_output["rcm_file"] else "rcm_lang_tagged.txt"
-    num_procs = int(config_gcm["num_procs"]) if config_gcm["num_procs"] else 1
+    num_procs = int(config_gcm["num_procs"]) if config_gcm["num_procs"] else -1
+    num_procs = int(config_gcm["num_procs"]) if int(config_gcm["num_procs"]) > 0 else multiprocessing.cpu_count()
 
     # for spf sampling, lid tags are required in the output
     if sampling == "spf":
