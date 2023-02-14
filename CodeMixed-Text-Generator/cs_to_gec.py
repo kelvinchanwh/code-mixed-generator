@@ -21,20 +21,19 @@ def parse_m2(input_m2_path):
 
 # %%
 def parse_cs(input_cs_corr_path):
-	cs_dict = dict()
+	cs_dict = list()
 	with open(input_cs_corr_path) as input_cs_corr:
 		for line in input_cs_corr:
 			line = line.strip()
 			if line.startswith("[SENT1]"):
 				line = line[7:]
 				S = "".join(line.split(" "))
-				cs_dict[S] = {"cs": [], "en": line.split(" "), "cs_list":[]}
+				cs_dict.append([S, line.split(" ")])
 			elif line.startswith("[CM]"):
 				line = line[10:]
 				cs_word_pair = [word.split("/")[0].split("\\") for word in line.split("|||")]
 				cs_list = [False if len(word)==1 else True for word in cs_word_pair]
-				cs_dict[S]['cs_list'] = cs_list
-				cs_dict[S]["cs"] = cs_word_pair
+				cs_dict[-1].extend([cs_word_pair, cs_list])
 	return cs_dict
 
 # %%
@@ -101,7 +100,7 @@ def apply_edit_to_cs(cs_words, cs_list, m2_edits):
 		prev_eid = eid
 	else:
 		target_sentence = [word for word in corrected if word != ""]
-		assert target_sentence[0] == '<S>', '(' + target_sentence + ')'
+		assert target_sentence[0].strip() == '<S>', '(' + " ".join(target_sentence) + ')'
 		target_sentence = target_sentence[1:]
 		return target_sentence
 
@@ -186,10 +185,10 @@ def main():
 	corr_cs = list()
 	incorr_cs = list()
 	with open(output_cs_incorr_path, 'w+') as output_cs_incorr, open(output_cs_corr_path, 'w+') as output_cs_corr:
-		for item in cs.items():
-			cs_words = item[1]["cs"]
-			cs_list = item[1]["cs_list"]
-			eng_words = item[1]["en"]
+		for item in cs:
+			eng_words = item[1]
+			cs_words = item[2]
+			cs_list = item[3]
 			# print(eng_words)
 			try:
 				m2_words, m2_edits = get_matching_m2(eng_words, m2)
