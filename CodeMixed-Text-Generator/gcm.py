@@ -76,15 +76,17 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, 
                 p = multiprocessing.Process(target=run_in_try, args=(
                     cm_text_generator.bench_Merged.main, source, arguments,))
                 p.start()
-                t = 300
+                t = 10
+                timeout = 30
                 p.join(t)
                 ret = 'fail'
                 if p.exitcode is None or p.exitcode >= 0:
-                    recv = dest.recv()
-                    ret = recv[0]
-                    sentence_1 = recv[1]
-                    sentence_2 = recv[2]
-                    alignment = recv[3]
+                    if dest.poll(timeout):
+                        recv = dest.recv()
+                        ret = recv[0]
+                        sentence_1 = recv[1]
+                        sentence_2 = recv[2]
+                        alignment = recv[3]
                 dest.close()
                 p.terminate()
 
@@ -94,7 +96,13 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, 
                         ret = random.sample(ret, k)
                     # word level language tagging
                     if lid_output == 1:
-                        ret = lang_tag(ret, arguments[3], source_lang, target_lang)
+                        init_ret = ret.copy()
+                        try:
+                            ret = lang_tag(ret, arguments[3], source_lang, target_lang)
+                        except ValueError:
+                            ret = init_ret
+                            print ("Could not parse tree, skipping sentence")
+                            continue
                     # spf based sampling
                     if sampling == 'spf':
                         langtags = [lang1_code.upper(), lang2_code.upper()]
@@ -215,11 +223,11 @@ if __name__ == "__main__":
                 p.kill()   
 
     # writing the generations to the output file
-    finaloutput = ""
-    for i in outputs:
-        for j in i:
-            finaloutput += "\n[SENT1]" + j[2] + "\n[SENT2]" + j[3] + "\n[ALIGN]" + j[4] + "\n[CM]" + j[0] + "\n[TREE]" + j[1] + "\n"
-    outfile = '{}/out-cm-{}-{}.txt'.format(outdir, source_lang, target_lang)
-    with open(outfile, 'w+') as f:
-        f.write(finaloutput)
+    # finaloutput = ""
+    # for i in outputs:
+    #     for j in i:
+    #         finaloutput += "\n[SENT1]" + j[2] + "\n[SENT2]" + j[3] + "\n[ALIGN]" + j[4] + "\n[CM]" + j[0] + "\n[TREE]" + j[1] + "\n"
+    # outfile = '{}/out-cm-{}-{}.txt'.format(outdir, source_lang, target_lang)
+    # with open(outfile, 'w+') as f:
+    #     f.write(finaloutput)
     logger.info("Sentence Generation Done")
