@@ -12,21 +12,22 @@ def compress(input_file_path, output_file_path):
 		cm = ""
 		for line in input_f:
 			if line.startswith("[BREAK]"):
-				output_f.writelines("[BREAK]\n" + pre_cache + cm + post_cache + "\n")
+				output_f.writelines(pre_cache + cm + post_cache + "\n")
 				counter = 0
-				pre_cache = ""
+				pre_cache = "[BREAK]\n"
 				post_cache = ""
 				cm = ""
 			elif line.startswith("[CM]"):
 				cm += line
 			elif line == "\n":
 				pass
-			elif counter < 3:
+			elif counter < 2:
 				pre_cache += line
 				counter += 1
-			elif counter == 3:
+			elif counter == 2:
 				pre_cache += line
 				counter += 1
+		output_f.writelines(pre_cache + cm + post_cache + "\n")
 
 
 if len(sys.argv) != 3:
