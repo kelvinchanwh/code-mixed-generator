@@ -10,6 +10,7 @@ import random
 import functools
 import nltk
 import subprocess
+import gc
 
 from configparser import ConfigParser
 from utils import rcm_std_mean, spf_sampling, frac_std_mean, frac_sampling
@@ -29,7 +30,6 @@ def run_in_try(func, pipe, params):
     try:
         ret = func(params)
     except Exception as e:
-        print ("ERROR")
         print (e)
         ret = "fail"
     pipe.send(ret)
@@ -64,7 +64,7 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, 
     count = 0
     outputs = []
     out_string = ""
-    with open_file(inpfile, 'r') as inpfile_f, open(outfile, 'w+') as f:
+    with open_file(inpfile, 'r') as inpfile_f, open(outfile, 'w+') as f, open(outfile + ".raw", 'w+') as raw_f:
         for line in inpfile_f.read().split('\n'):
             if line != "":
                 out_string += line + '\n'
@@ -92,6 +92,14 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, 
                 p.terminate()
 
                 if type(ret) != str and len(ret) > 0:
+
+                    # Write raw outputs for future processing
+                    raw_out = [cs + (sentence_1, sentence_2, alignment) for cs in ret]
+                    raw_f.write("\n[BREAK]\n")
+                    for j in raw_out:
+                        raw_output = "\n[SENT1]" + j[2] + "\n[SENT2]" + j[3] + "\n[ALIGN]" + j[4] + "\n[CM]" + j[0] + "\n[TREE]" + j[1] + "\n"
+                        raw_f.write(raw_output)
+
                     # random sample only if k != -1 and sampling is not spf
                     if k !=-1 and len(ret) >= k and sampling != 'spf':
                         ret = random.sample(ret, k)
@@ -121,11 +129,12 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, 
 
                     ret = [cs + (sentence_1, sentence_2, alignment) for cs in ret]
                     # final generated cm to be added for each input sentence pair
-                    outputs.append(ret)
+                    # outputs.append(ret)
                     for j in ret:
                         finaloutput = "\n[SENT1]" + j[2] + "\n[SENT2]" + j[3] + "\n[ALIGN]" + j[4] + "\n[CM]" + j[0] + "\n[TREE]" + j[1] + "\n"
                         f.write(finaloutput)
-    return outputs
+            gc.collect()
+    # return outputs
 
 
 if __name__ == "__main__":
@@ -231,12 +240,12 @@ if __name__ == "__main__":
                 p.kill()   
 
     # writing the generations to the output file
-    outfile_path = '{}/out-cm-{}-{}.txt'.format(outdir, source_lang, target_lang)
-    with open(outfile_path, 'w+') as outfile:
-        for value in inputs:
-            fname = '{}/out-cm-{}-{}-{}.txt'.format(outdir, source_lang, target_lang, value)
-            with open(fname) as infile:
-                for line in infile:
-                    outfile.write(line)
+    # outfile_path = '{}/out-cm-{}-{}.txt'.format(outdir, source_lang, target_lang)
+    # with open(outfile_path, 'w+') as outfile:
+    #     for value in inputs:
+    #         fname = '{}/out-cm-{}-{}-{}.txt'.format(outdir, source_lang, target_lang, value)
+    #         with open(fname) as infile:
+    #             for line in infile:
+    #                 outfile.write(line)
 
     logger.info("Sentence Generation Done")
