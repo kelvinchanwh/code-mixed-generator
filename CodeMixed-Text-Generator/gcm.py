@@ -94,11 +94,10 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, 
                 if type(ret) != str and len(ret) > 0:
 
                     # Write raw outputs for future processing
-                    raw_out = [cs + (sentence_1, sentence_2, alignment) for cs in ret]
-                    raw_f.write("\n[BREAK]\n")
-                    for j in raw_out:
-                        raw_output = "\n[SENT1]" + j[2] + "\n[SENT2]" + j[3] + "\n[ALIGN]" + j[4] + "\n[CM]" + j[0] + "\n[TREE]" + j[1] + "\n"
-                        raw_f.write(raw_output)
+                    raw_f.write("\n[BREAK]" + "\n[SENT1]" + sentence_1 + "\n[SENT2]" + sentence_2 + "\n[ALIGN]" + alignment)
+                    for j in ret:
+                        raw_f.write("\n[CM]" + j[0])
+                    raw_f.write("\n[TREE]" + j[1] + "\n")
 
                     # random sample only if k != -1 and sampling is not spf
                     if k !=-1 and len(ret) >= k and sampling != 'spf':
