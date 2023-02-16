@@ -1,5 +1,6 @@
 import sys
 import copy
+import multiprocessing as mp
 
 # %%
 def parse_m2(input_m2_path):
@@ -169,6 +170,47 @@ def align_cs_to_m2(cs_words, cs_list, m2_words):
 
 	return words_output, cs_output
 
+def apply_cs(join, eng_words, cs_words, cs_list):
+	try:
+		m2_words, m2_edits = get_matching_m2(eng_words, m2)
+	except KeyError:
+		print ("Key '%s' not found"%("".join(eng_words)))
+	try:
+		initial_m2_words = copy.deepcopy(m2_words)
+		initial_m2_edits = copy.deepcopy(m2_edits)
+		eng_words, m2_edits = align_edits_to_eng(eng_words, m2_words, m2_edits)
+	except IndexError:
+		m2_words = initial_m2_words
+		m2_edits = initial_m2_edits
+
+	cs_words, cs_list = align_cs_to_m2(cs_words, cs_list, m2_words)
+
+	# if (cs_words.count("XXXXX")/len(cs_words)) <= max_missing_ratio:
+		# Check if max edit is within cs_words list
+	if max([m2_edit[0][1] for m2_edit in m2_edits]) <= len(cs_list):
+		incorr = apply_edit_to_cs(cs_words, cs_list, m2_edits)
+
+		# Remove empty words and "XXXXX" placeholders
+		corr = [i for i in cs_words if (i != "" and i != "XXXXX")]
+		incorr = [i for i in incorr if (i != "" and i != "XXXXX")]
+
+		corr = " ".join(corr)
+		incorr = " ".join(incorr)
+
+		# output_cs_incorr.write(incorr + '\n')
+		# output_cs_corr.write(corr + '\n')
+
+		# incorr_cs.append(incorr)
+		# corr_cs.append(corr)
+		return incorr, corr
+	else:
+		print ("Sentence is shorter than m2 edit")
+		print ("M2: " + str("|||".join(m2_words)))
+		print ("CS: " + str("|||".join(cs_words)))
+	# else:
+	# 	print ("Sentence has too many missing words")
+	# 	print ("M2: " + str("|||".join(m2_words)))
+	# 	print ("CS: " + str("|||".join(cs_words)))	
 
 #%%
 
@@ -179,57 +221,23 @@ def main():
 	output_cs_corr_path = sys.argv[4]
 	# max_missing_ratio = float(sys.argv[5])
 
+	global m2
 	m2 = parse_m2(input_m2_path)
 	cs = parse_cs(input_cs_corr_path)
 
+	global corr_cs
+	global incorr_cs
 	corr_cs = list()
 	incorr_cs = list()
 	with open(output_cs_incorr_path, 'w+') as output_cs_incorr, open(output_cs_corr_path, 'w+') as output_cs_corr:
-		for item in cs:
-			eng_words = item[1]
-			cs_words = item[2]
-			cs_list = item[3]
-			# print(eng_words)
-			try:
-				m2_words, m2_edits = get_matching_m2(eng_words, m2)
-			except KeyError:
-				print ("Key '%s' not found"%("".join(eng_words)))
-				continue
-			try:
-				initial_m2_words = copy.deepcopy(m2_words)
-				initial_m2_edits = copy.deepcopy(m2_edits)
-				eng_words, m2_edits = align_edits_to_eng(eng_words, m2_words, m2_edits)
-			except IndexError:
-				m2_words = initial_m2_words
-				m2_edits = initial_m2_edits
 
-			cs_words, cs_list = align_cs_to_m2(cs_words, cs_list, m2_words)
-
-			# if (cs_words.count("XXXXX")/len(cs_words)) <= max_missing_ratio:
-				# Check if max edit is within cs_words list
-			if max([m2_edit[0][1] for m2_edit in m2_edits]) <= len(cs_list):
-				incorr = apply_edit_to_cs(cs_words, cs_list, m2_edits)
-
-				# Remove empty words and "XXXXX" placeholders
-				corr = [i for i in cs_words if (i != "" and i != "XXXXX")]
-				incorr = [i for i in incorr if (i != "" and i != "XXXXX")]
-
-				corr = " ".join(corr)
-				incorr = " ".join(incorr)
-
-				output_cs_incorr.write(incorr + '\n')
-				output_cs_corr.write(corr + '\n')
-
-				incorr_cs.append(incorr)
-				corr_cs.append(corr)
-			else:
-				print ("Sentence is shorter than m2 edit")
-				print ("M2: " + str("|||".join(m2_words)))
-				print ("CS: " + str("|||".join(cs_words)))
-			# else:
-			# 	print ("Sentence has too many missing words")
-			# 	print ("M2: " + str("|||".join(m2_words)))
-			# 	print ("CS: " + str("|||".join(cs_words)))
+		pool = mp.Pool(mp.cpu_count())
+		batches = pool.starmap(apply_cs, cs)
+		
+		for results in batches:
+			if results is not None:
+				output_cs_incorr.write(results[0] + "\n")
+				output_cs_corr.write(results[1] + "\n")
 
 		# check if both files are of equal length
 		assert len(incorr_cs) == len(corr_cs), "Parallel sentences do not have equal length"
