@@ -21,13 +21,14 @@ def compress(input_file_path, output_file_path):
 				cm += line
 			elif line == "\n":
 				pass
-			elif counter < 2:
+			elif counter < 3:
 				pre_cache += line
 				counter += 1
-			elif counter == 2:
-				pre_cache += line
+			elif counter == 3:
+				post_cache += line
 				counter += 1
 		output_f.writelines(pre_cache + cm + post_cache + "\n")
+	print ("Completed processing file {}. Saved to {}".format(input_file_path, output_file_path))
 
 
 if len(sys.argv) != 3:
