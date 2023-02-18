@@ -101,7 +101,9 @@ def apply_edit_to_cs(cs_words, cs_list, m2_edits):
 		prev_eid = eid
 	else:
 		target_sentence = [word for word in corrected if word != ""]
-		assert target_sentence[0].strip() == '<S>', '(' + " ".join(target_sentence) + ')'
+		if target_sentence[0].strip() != "<S>":
+			print ('Sentence does not start with <S> (' + " ".join(target_sentence) + ')')
+		# assert target_sentence[0].strip() == '<S>', '(' + " ".join(target_sentence) + ')'
 		target_sentence = target_sentence[1:]
 		return target_sentence
 
@@ -124,9 +126,16 @@ def align_cs_to_m2(cs_words, cs_list, m2_words):
 					if split_words[word] == m2_words[m2_pointer]:
 						if word == len(split_words)-1:
 							# Add the whole phrase in the final split for non-splitable terms
-							words_output.append(cs_word if cs_list[cs_pointer] else split_words[word])	
+							if cs_list[cs_pointer]:
+								words_output.append(cs_word)
+							else:
+								words_output.append(split_words[word])
+								
 						else:
-							words_output.append("" if cs_list[cs_pointer] else split_words[word])
+							if cs_list[cs_pointer]:
+								words_output.append("")
+							else:
+								words_output.append(split_words[word])
 						cs_output.append(True if cs_list[cs_pointer] else False)
 						m2_pointer += 1
 					else:
@@ -154,7 +163,10 @@ def align_cs_to_m2(cs_words, cs_list, m2_words):
 									break
 				cs_pointer += 1
 			else:
-				words_output.append(cs_word if cs_list[cs_pointer] else en_word)	
+				if cs_list[cs_pointer]:
+					words_output.append(cs_word)
+				else:
+					words_output.append(en_word)
 				cs_output.append(True if cs_list[cs_pointer] else False)
 				m2_pointer += 1
 				cs_pointer += 1
@@ -175,6 +187,7 @@ def apply_cs(join, eng_words, cs_words, cs_list):
 		m2_words, m2_edits = get_matching_m2(eng_words, m2)
 	except KeyError:
 		print ("Key '%s' not found"%("".join(eng_words)))
+		return
 	try:
 		initial_m2_words = copy.deepcopy(m2_words)
 		initial_m2_edits = copy.deepcopy(m2_edits)
@@ -205,14 +218,22 @@ def apply_cs(join, eng_words, cs_words, cs_list):
 		return incorr, corr
 	else:
 		print ("Sentence is shorter than m2 edit")
-		print ("M2: " + str("|||".join(m2_words)))
-		print ("CS: " + str("|||".join(cs_words)))
+		# print ("M2: " + str("|||".join(m2_words)))
+		# print ("CS: " + str("|||".join(cs_words)))
 	# else:
 	# 	print ("Sentence has too many missing words")
 	# 	print ("M2: " + str("|||".join(m2_words)))
 	# 	print ("CS: " + str("|||".join(cs_words)))	
 
 #%%
+
+def run_in_try(*params):
+	try:
+		ret = apply_cs(*params)
+		return ret
+	except Exception as e:
+		print (e)
+
 
 def main():
 	input_cs_corr_path = sys.argv[1]
@@ -232,7 +253,7 @@ def main():
 	with open(output_cs_incorr_path, 'w+') as output_cs_incorr, open(output_cs_corr_path, 'w+') as output_cs_corr:
 
 		pool = mp.Pool(mp.cpu_count())
-		batches = pool.starmap(apply_cs, cs)
+		batches = pool.starmap(run_in_try, cs)
 		
 		for results in batches:
 			if results is not None:
