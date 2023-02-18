@@ -29,6 +29,10 @@ def compress(input_file_path, output_file_path):
 				counter += 1
 		output_f.writelines(pre_cache + cm + post_cache + "\n")
 	print ("Completed processing file {}. Saved to {}".format(input_file_path, output_file_path))
+	if os.path.isfile(input_file_path):
+		os.remove(input_file_path)
+	else:
+		print ("Error: {} not found".format(input_file_path))
 
 
 if len(sys.argv) != 3:
@@ -41,7 +45,8 @@ output_path = sys.argv[2]
 num_procs = multiprocessing.cpu_count()
 
 files_list = [files for files in os.listdir(input_path) if files.endswith(".raw")]
-procs = [files_list[n:n+num_procs] for n in range(0, len(files_list), num_procs)]
+# files_list = [files for files in files_list if (int(files.split("-")[4].split(".")[0]) >= 20000 and int(files.split("-")[4].split(".")[0]) < 30000)]
+procs = [files_list[n:n+num_procs] for n in range(0, len(files_list), num_procs*2)]
 
 os.makedirs(output_path, exist_ok=True)
 
