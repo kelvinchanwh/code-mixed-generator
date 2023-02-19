@@ -89,7 +89,9 @@ def translate_batch(lang1_code, lang2_code, lang1_in, lang2_op_file, max_len=500
             translations = [list(filter(lambda a: a != "\u3000", nagisa.tagging(sentence).words)) for sentence in translations]
         elif "ko" in lang2_code:
             tokenizer = Komoran()        
-            translations = [tokenizer.morphs(sentence) for sentence in translations]   
+            translations = [tokenizer.morphs(sentence) for sentence in translations]
+        else:
+            translations = [[sentence] for sentence in translations]   
 
         for translation in translations:
             # print (translation.text)
