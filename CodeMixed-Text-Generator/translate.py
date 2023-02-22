@@ -90,12 +90,13 @@ def translate_batch(lang1_code, lang2_code, lang1_in, lang2_op_file, max_len=500
         elif "ko" in lang2_code:
             tokenizer = Komoran()        
             translations = [tokenizer.morphs(sentence) for sentence in translations]
-        else:
-            translations = [[sentence] for sentence in translations]   
 
         for translation in translations:
             # print (translation.text)
-            f.writelines(" ".join(translation) + "\n")
+            if "zh" in lang2_code or "ja" in lang2_code or "ko" in lang2_code:
+                f.writelines(" ".join(translation) + "\n")
+            else:
+                f.writelines(translation.strip() + "\n")
 
         print("Total Tokenization Time: %d"%(time.time()-translatetime-starttime))
 
