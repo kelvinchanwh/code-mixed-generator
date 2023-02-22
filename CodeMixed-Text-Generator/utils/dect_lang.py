@@ -88,7 +88,7 @@ if __name__ == "__main__":
 
 	with open(input_rcm_file, "r") as input_f, open(output_rcm_file, "w+") as output_f:
 		sentences = input_f.read().split("\n")
-		sentences = [tokenize(sent.replace("\u3000", " "), lang2_tag) for sent in sentences]
+		sentences = [tokenize(sent, lang2_tag).replace("\u3000", " ") for sent in sentences]
 		cs_list = [create_cslang_list(sentence.split(" ")) for sentence in sentences]
 		for sentence, sent_list in zip(sentences, cs_list):
 			write_str  = ""
