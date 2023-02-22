@@ -97,7 +97,7 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, 
                     raw_f.write("\n[BREAK]" + "\n[SENT1]" + sentence_1 + "\n[SENT2]" + sentence_2 + "\n[ALIGN]" + alignment)
                     for j in ret:
                         raw_f.write("\n[CM]" + j[0])
-                    raw_f.write("\n[TREE]" + j[1] + "\n")
+                    raw_f.write("\n[TREE]" + arguments[3] + "\n")
 
                     # random sample only if k != -1 and sampling is not spf
                     if k !=-1 and len(ret) >= k and sampling != 'spf':
