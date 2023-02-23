@@ -1,4 +1,5 @@
 import random
+import sys
 import nltk
 from utils import rcm_std_mean, spf_sampling, frac_std_mean, frac_sampling
 
@@ -58,38 +59,43 @@ def post_process(ret, sent1, sent2, alignment, tree, lang1_code, lang2_code, f, 
 	return ret
 
 
-input_path = "data/zh-to-en-gcm/out-cm-ch-en-0.txt.raw"
-output_path = "data/zh-to-en-gcm/out-cm-ch-en-0-k1.txt"
-pregcm_path = "data/zh-to-en/input-cm-ch-en-0.txt"
-lang1_code = "CH"
-lang2_code = "EN"
-rcm_path = "rcm_lang_tagged_zh.txt"
 
-with open(input_path, "r") as input_file, open(output_path, "w+") as output_file:
-	pregcm = open(pregcm_path, "r").read().split("\n\n")
-	tree_dict = dict()
-	for sent in pregcm:
-		rows = sent.split("\n")
-		tree_dict["".join(rows[2].split(" "))] = rows[3]
+if __name__ == "__main__":
+	if len(sys.argv) != 7:
+		print("[USAGE] %s input_path output_path pregcm_path rcm_path lang1_tag lang2_tag" % sys.argv[0])
+		sys.exit()
+	input_path = sys.argv[1]
+	output_path = sys.argv[2]
+	pregcm_path = sys.argv[3]
+	rcm_path = sys.argv[4]
+	lang1_code = sys.argv[5]
+	lang2_code = sys.argv[6]
 
-	sentences = input_file.read().split("\n\n")
-	data = list()
-	for sent in sentences:
-		sent_data = dict()
-		cm_list = list()
-		for line in sent.split("\n"):
-			if line.startswith("[SENT1]"):
-				sent_data["sent1"] = line[7:]
-			elif line.startswith("[SENT2]"):
-				sent_data["sent2"] = line[7:]
-			elif line.startswith("[ALIGN]"):
-				sent_data["align"] = line[7:]
-			elif line.startswith("[CM]"):
-				cm_list.append(line[7:])
-			elif line.startswith("[TREE]"):
-				sent_data["tree"] = tree_dict["".join(sent_data["sent1"].replace("``", "\"").split(" "))]
-		sent_data["cm"] = [[cm, ""] for cm in cm_list]
-		data.append(sent_data)
-	
-	for sent in data:
-		post_process(sent["cm"], sent["sent1"], sent["sent2"], sent["align"], sent["tree"], lang1_code, lang2_code, output_file, k = 1, sampling = "frac", rcm_file = rcm_path)
+	with open(input_path, "r") as input_file, open(output_path, "w+") as output_file:
+		pregcm = open(pregcm_path, "r").read().split("\n\n")
+		tree_dict = dict()
+		for sent in pregcm:
+			rows = sent.split("\n")
+			tree_dict["".join(rows[2].split(" "))] = rows[3]
+
+		sentences = input_file.read().split("\n\n")
+		data = list()
+		for sent in sentences:
+			sent_data = dict()
+			cm_list = list()
+			for line in sent.split("\n"):
+				if line.startswith("[SENT1]"):
+					sent_data["sent1"] = line[7:]
+				elif line.startswith("[SENT2]"):
+					sent_data["sent2"] = line[7:]
+				elif line.startswith("[ALIGN]"):
+					sent_data["align"] = line[7:]
+				elif line.startswith("[CM]"):
+					cm_list.append(line[7:])
+				elif line.startswith("[TREE]"):
+					sent_data["tree"] = tree_dict["".join(sent_data["sent1"].replace("``", "\"").split(" "))]
+			sent_data["cm"] = [[cm, ""] for cm in cm_list]
+			data.append(sent_data)
+		
+		for sent in data:
+			post_process(sent["cm"], sent["sent1"], sent["sent2"], sent["align"], sent["tree"], lang1_code, lang2_code, output_file, k = 1, sampling = "frac", rcm_file = rcm_path)
