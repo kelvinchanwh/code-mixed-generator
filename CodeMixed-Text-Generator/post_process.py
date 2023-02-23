@@ -61,7 +61,7 @@ def post_process(ret, sent1, sent2, alignment, tree, lang1_code, lang2_code, f, 
 
 
 if __name__ == "__main__":
-	if len(sys.argv) != 7:
+	if len(sys.argv) != 8:
 		print("[USAGE] %s input_path output_path pregcm_path rcm_path lang1_tag lang2_tag" % sys.argv[0])
 		sys.exit()
 	input_path = sys.argv[1]
@@ -70,6 +70,7 @@ if __name__ == "__main__":
 	rcm_path = sys.argv[4]
 	lang1_code = sys.argv[5]
 	lang2_code = sys.argv[6]
+	k = int(sys.argv[7])
 
 	with open(input_path, "r") as input_file, open(output_path, "w+") as output_file:
 		pregcm = open(pregcm_path, "r").read().split("\n\n")
@@ -102,4 +103,4 @@ if __name__ == "__main__":
 			data.append(sent_data)
 		
 		for sent in data:
-			post_process(sent["cm"], sent["sent1"], sent["sent2"], sent["align"], sent["tree"], lang1_code, lang2_code, output_file, k = 1, sampling = "frac", rcm_file = rcm_path)
+			post_process(sent["cm"], sent["sent1"], sent["sent2"], sent["align"], sent["tree"], lang1_code, lang2_code, output_file, k = k, sampling = "frac", rcm_file = rcm_path)

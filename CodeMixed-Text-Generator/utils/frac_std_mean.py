@@ -6,13 +6,13 @@ DATA_DIR = os.path.join(BASE_DIR, 'data')
 
 def count_cs(tag3d, langtags, langind=1):
     '''
-    Number of CS terms in an utterance.
+    Fraction of CS terms in an utterance.
     '''
     counter = 0
     for i in tag3d:
         if i[langind] != langtags[1] and i[langind] in langtags:
             counter += 1
-    return counter
+    return counter/len(tag3d)
 
 
 def stats_cs(tags3d, langtags, langind=1):
