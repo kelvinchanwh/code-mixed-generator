@@ -95,10 +95,13 @@ if __name__ == "__main__":
 					elif line.startswith("[CM]"):
 						cm_list.append(line[7:])
 					elif line.startswith("[TREE]"):
-						sent_data["tree"] = tree_dict["".join(sent_data["sent1"].replace("``", "\"").split(" "))]
+						sent_data["tree"] = tree_dict["".join(sent_data["sent1"].split(" "))]
 			except KeyError:
-				print ("Unable to locate tree {}".format("".join(sent_data["sent1"].replace("``", "\"").split(" "))))
-				continue
+				try:
+					sent_data["tree"] = tree_dict["".join(sent_data["sent1"].replace("``", "\"").split(" "))]
+				except KeyError:
+					print ("Unable to locate tree {}".format("".join(sent_data["sent1"].replace("``", "\"").split(" "))))
+					continue
 			sent_data["cm"] = [[cm, ""] for cm in cm_list]
 			data.append(sent_data)
 		
