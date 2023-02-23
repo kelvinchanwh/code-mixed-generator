@@ -83,17 +83,21 @@ if __name__ == "__main__":
 		for sent in sentences:
 			sent_data = dict()
 			cm_list = list()
-			for line in sent.split("\n"):
-				if line.startswith("[SENT1]"):
-					sent_data["sent1"] = line[7:]
-				elif line.startswith("[SENT2]"):
-					sent_data["sent2"] = line[7:]
-				elif line.startswith("[ALIGN]"):
-					sent_data["align"] = line[7:]
-				elif line.startswith("[CM]"):
-					cm_list.append(line[7:])
-				elif line.startswith("[TREE]"):
-					sent_data["tree"] = tree_dict["".join(sent_data["sent1"].replace("``", "\"").split(" "))]
+			try:
+				for line in sent.split("\n"):
+					if line.startswith("[SENT1]"):
+						sent_data["sent1"] = line[7:]
+					elif line.startswith("[SENT2]"):
+						sent_data["sent2"] = line[7:]
+					elif line.startswith("[ALIGN]"):
+						sent_data["align"] = line[7:]
+					elif line.startswith("[CM]"):
+						cm_list.append(line[7:])
+					elif line.startswith("[TREE]"):
+						sent_data["tree"] = tree_dict["".join(sent_data["sent1"].replace("``", "\"").split(" "))]
+			except KeyError:
+				print ("Unable to locate tree {}".format("".join(sent_data["sent1"].replace("``", "\"").split(" "))))
+				continue
 			sent_data["cm"] = [[cm, ""] for cm in cm_list]
 			data.append(sent_data)
 		
