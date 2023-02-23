@@ -130,7 +130,7 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, 
                     # final generated cm to be added for each input sentence pair
                     # outputs.append(ret)
                     for j in ret:
-                        finaloutput = "\n[SENT1]" + j[2] + "\n[SENT2]" + j[3] + "\n[ALIGN]" + j[4] + "\n[CM]" + j[0] + "\n[TREE]" + j[1] + "\n"
+                        finaloutput = "\n[SENT1]" + j[2] + "\n[SENT2]" + j[3] + "\n[ALIGN]" + j[4] + "\n[CM]" + j[0] + "\n[TREE]" + arguments[3] + "\n"
                         f.write(finaloutput)
             gc.collect()
     # return outputs
