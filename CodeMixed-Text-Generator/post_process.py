@@ -1,6 +1,9 @@
 import random
 import sys
 import nltk
+import os
+import glob
+import multiprocessing as mp
 from utils import rcm_std_mean, spf_sampling, frac_std_mean, frac_sampling
 
 
@@ -58,11 +61,51 @@ def post_process(ret, sent1, sent2, alignment, tree, lang1_code, lang2_code, f, 
 		f.write(finaloutput)
 	return ret
 
+def process_file(in_f, output_path, pregcm_path, rcm_path, lang1_code, lang2_code, k):
+	with open(in_f, "r") as input_file, open(output_path + "/" + in_f.split("/")[-1].replace(".raw", ""), "w+") as output_file:
+			if pregcm_path != "None":
+				pregcm = open(pregcm_path, "r").read().split("\n\n")
+				tree_dict = dict()
+				for sent in pregcm:
+					rows = sent.split("\n")
+					tree_dict["".join(rows[2].split(" "))] = rows[3]
+
+			sentences = input_file.read().split("\n\n")
+			data = list()
+			for sent in sentences:
+				sent_data = dict()
+				cm_list = list()
+				try:
+					for line in sent.split("\n"):
+						if line.startswith("[SENT1]"):
+							sent_data["sent1"] = line[7:]
+						elif line.startswith("[SENT2]"):
+							sent_data["sent2"] = line[7:]
+						elif line.startswith("[ALIGN]"):
+							sent_data["align"] = line[7:]
+						elif line.startswith("[CM]"):
+							cm_list.append(line[7:]) # Include the first 3 ||| seperators
+						elif line.startswith("[TREE]"):
+							if pregcm_path != "None":
+								sent_data["tree"] = tree_dict["".join(sent_data["sent1"].split(" "))]
+							else:
+								sent_data["tree"] = line[6:]
+				except KeyError:
+					try:
+						sent_data["tree"] = tree_dict["".join(sent_data["sent1"].replace("``", "\"").split(" "))]
+					except KeyError:
+						print ("Unable to locate tree {}".format("".join(sent_data["sent1"].replace("``", "\"").split(" "))))
+						continue
+				sent_data["cm"] = [[cm, ""] for cm in cm_list]
+				data.append(sent_data)
+			
+			for sent in data:
+				post_process(sent["cm"], sent["sent1"], sent["sent2"], sent["align"], sent["tree"], lang1_code, lang2_code, output_file, k = k, sampling = "frac", rcm_file = rcm_path)
 
 
 if __name__ == "__main__":
 	if len(sys.argv) != 8:
-		print("[USAGE] %s input_path output_path pregcm_path rcm_path lang1_tag lang2_tag" % sys.argv[0])
+		print("[USAGE] %s input_path output_path pregcm_path rcm_path lang1_tag lang2_tag k" % sys.argv[0])
 		sys.exit()
 	input_path = sys.argv[1]
 	output_path = sys.argv[2]
@@ -72,38 +115,12 @@ if __name__ == "__main__":
 	lang2_code = sys.argv[6]
 	k = int(sys.argv[7])
 
-	with open(input_path, "r") as input_file, open(output_path, "w+") as output_file:
-		pregcm = open(pregcm_path, "r").read().split("\n\n")
-		tree_dict = dict()
-		for sent in pregcm:
-			rows = sent.split("\n")
-			tree_dict["".join(rows[2].split(" "))] = rows[3]
+	try:
+		os.mkdir(output_path)
+	except OSError as error:
+		print(error)    
 
-		sentences = input_file.read().split("\n\n")
-		data = list()
-		for sent in sentences:
-			sent_data = dict()
-			cm_list = list()
-			try:
-				for line in sent.split("\n"):
-					if line.startswith("[SENT1]"):
-						sent_data["sent1"] = line[7:]
-					elif line.startswith("[SENT2]"):
-						sent_data["sent2"] = line[7:]
-					elif line.startswith("[ALIGN]"):
-						sent_data["align"] = line[7:]
-					elif line.startswith("[CM]"):
-						cm_list.append(line[7:])
-					elif line.startswith("[TREE]"):
-						sent_data["tree"] = tree_dict["".join(sent_data["sent1"].split(" "))]
-			except KeyError:
-				try:
-					sent_data["tree"] = tree_dict["".join(sent_data["sent1"].replace("``", "\"").split(" "))]
-				except KeyError:
-					print ("Unable to locate tree {}".format("".join(sent_data["sent1"].replace("``", "\"").split(" "))))
-					continue
-			sent_data["cm"] = [[cm, ""] for cm in cm_list]
-			data.append(sent_data)
-		
-		for sent in data:
-			post_process(sent["cm"], sent["sent1"], sent["sent2"], sent["align"], sent["tree"], lang1_code, lang2_code, output_file, k = k, sampling = "frac", rcm_file = rcm_path)
+	files = glob.glob(input_path + "/*.raw")
+
+	pool = mp.Pool(mp.cpu_count())
+	batches = pool.starmap(process_file, [(in_f, output_path, pregcm_path, rcm_path, lang1_code, lang2_code, k) for in_f in files])
