@@ -104,23 +104,22 @@ def process_file(in_f, output_path, pregcm_path, rcm_path, lang1_code, lang2_cod
 
 
 if __name__ == "__main__":
-	if len(sys.argv) != 7:
-		print("[USAGE] %s input_path output_path pregcm_path rcm_path lang1_tag lang2_tag" % sys.argv[0])
+	if len(sys.argv) != 6:
+		print("[USAGE] %s input_path pregcm_path rcm_path lang1_tag lang2_tag" % sys.argv[0])
 		sys.exit()
 	input_path = sys.argv[1]
-	output_path = sys.argv[2]
-	pregcm_path = sys.argv[3]
-	rcm_path = sys.argv[4]
-	lang1_code = sys.argv[5]
-	lang2_code = sys.argv[6]
-
-	try:
-		os.mkdir(output_path)
-	except OSError as error:
-		print(error)    
+	pregcm_path = sys.argv[2]
+	rcm_path = sys.argv[3]
+	lang1_code = sys.argv[4]
+	lang2_code = sys.argv[5]
 
 	files = glob.glob(input_path + "/*.raw")
 
 	for k in [1, 3, 5]:
+		try:
+			output_path = os.path.join(input_path, "k-%d"%k)
+			os.mkdir(output_path)
+		except OSError as error:
+			print(error)    
 		pool = mp.Pool(mp.cpu_count())
 		batches = pool.starmap(process_file, [(in_f, output_path, pregcm_path, rcm_path, lang1_code, lang2_code, k) for in_f in files])
