@@ -29,7 +29,7 @@ def stats_cs(tags3d, langtags, langind=1):
 
     return sp_avg, sp_std
 
-def main(rcm_corpus, langtags):
+def main(rcm_corpus, langtags, verbose=False):
     rcm_corpus = os.path.join(DATA_DIR, rcm_corpus)
 
     with open(rcm_corpus, "r") as f:
@@ -46,6 +46,7 @@ def main(rcm_corpus, langtags):
         processed_data.append(tmp)
 
     sp_avg, sp_std = stats_cs(processed_data, langtags)
-    print("Mean and Standard Deviation of RCM Corpus:", (sp_avg, sp_std))
+    if verbose:
+        print("Mean and Standard Deviation of RCM Corpus:", (sp_avg, sp_std))
 
     return sp_avg, sp_std

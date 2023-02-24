@@ -50,7 +50,7 @@ def post_process(ret, sent1, sent2, alignment, tree, lang1_code, lang2_code, f, 
 	elif sampling == 'frac':
 		langtags = [lang1_code.upper(), lang2_code.upper()]
 
-		frac_mean, frac_std = frac_std_mean.main(rcm_file, langtags)
+		frac_mean, frac_std = frac_std_mean.main(rcm_file, langtags, verbose = False)
 		ret = frac_sampling.rank(ret, langtags, frac_mean, frac_std)
 
 	ret = [cs + (sent1, sent2, alignment) for cs in ret]
@@ -62,45 +62,48 @@ def post_process(ret, sent1, sent2, alignment, tree, lang1_code, lang2_code, f, 
 	return ret
 
 def process_file(in_f, output_path, pregcm_path, rcm_path, lang1_code, lang2_code, k):
-	with open(in_f, "r") as input_file, open(output_path + "/" + in_f.split("/")[-1].replace(".raw", ""), "w+") as output_file:
-			if pregcm_path != "None":
-				pregcm = open(pregcm_path, "r").read().split("\n\n")
-				tree_dict = dict()
-				for sent in pregcm:
-					rows = sent.split("\n")
-					tree_dict["".join(rows[2].split(" "))] = rows[3]
+	try:
+		with open(in_f, "r") as input_file, open(output_path + "/" + in_f.split("/")[-1].replace(".raw", ""), "w+") as output_file:
+				if pregcm_path != "None":
+					pregcm = open(pregcm_path, "r").read().split("\n\n")
+					tree_dict = dict()
+					for sent in pregcm:
+						rows = sent.split("\n")
+						tree_dict["".join(rows[2].split(" "))] = rows[3]
 
-			sentences = input_file.read().split("\n\n")
-			data = list()
-			for sent in sentences:
-				sent_data = dict()
-				cm_list = list()
-				try:
-					for line in sent.split("\n"):
-						if line.startswith("[SENT1]"):
-							sent_data["sent1"] = line[7:]
-						elif line.startswith("[SENT2]"):
-							sent_data["sent2"] = line[7:]
-						elif line.startswith("[ALIGN]"):
-							sent_data["align"] = line[7:]
-						elif line.startswith("[CM]"):
-							cm_list.append(line[7:]) # Include the first 3 ||| seperators
-						elif line.startswith("[TREE]"):
-							if pregcm_path != "None":
-								sent_data["tree"] = tree_dict["".join(sent_data["sent1"].split(" "))]
-							else:
-								sent_data["tree"] = line[6:]
-				except KeyError:
+				sentences = input_file.read().split("\n\n")
+				data = list()
+				for sent in sentences:
+					sent_data = dict()
+					cm_list = list()
 					try:
-						sent_data["tree"] = tree_dict["".join(sent_data["sent1"].replace("``", "\"").split(" "))]
+						for line in sent.split("\n"):
+							if line.startswith("[SENT1]"):
+								sent_data["sent1"] = line[7:]
+							elif line.startswith("[SENT2]"):
+								sent_data["sent2"] = line[7:]
+							elif line.startswith("[ALIGN]"):
+								sent_data["align"] = line[7:]
+							elif line.startswith("[CM]"):
+								cm_list.append(line[7:]) # Include the first 3 ||| seperators
+							elif line.startswith("[TREE]"):
+								if pregcm_path != "None":
+									sent_data["tree"] = tree_dict["".join(sent_data["sent1"].split(" "))]
+								else:
+									sent_data["tree"] = line[6:]
 					except KeyError:
-						print ("Unable to locate tree {}".format("".join(sent_data["sent1"].replace("``", "\"").split(" "))))
-						continue
-				sent_data["cm"] = [[cm, ""] for cm in cm_list]
-				data.append(sent_data)
-			
-			for sent in data:
-				post_process(sent["cm"], sent["sent1"], sent["sent2"], sent["align"], sent["tree"], lang1_code, lang2_code, output_file, k = k, sampling = "frac", rcm_file = rcm_path)
+						try:
+							sent_data["tree"] = tree_dict["".join(sent_data["sent1"].replace("``", "\"").split(" "))]
+						except KeyError:
+							print ("Unable to locate tree {}".format("".join(sent_data["sent1"].replace("``", "\"").split(" "))))
+							continue
+					sent_data["cm"] = [[cm, ""] for cm in cm_list]
+					data.append(sent_data)
+				
+				for sent in data:
+					post_process(sent["cm"], sent["sent1"], sent["sent2"], sent["align"], sent["tree"], lang1_code, lang2_code, output_file, k = k, sampling = "frac", rcm_file = rcm_path)
+	except Exception as e:
+		print (e)
 
 
 if __name__ == "__main__":
@@ -121,5 +124,10 @@ if __name__ == "__main__":
 			os.mkdir(output_path)
 		except OSError as error:
 			print(error)    
-		pool = mp.Pool(mp.cpu_count())
+		pool = mp.Pool(min(len(files), int(mp.cpu_count()/2)))
 		batches = pool.starmap(process_file, [(in_f, output_path, pregcm_path, rcm_path, lang1_code, lang2_code, k) for in_f in files])
+		print ("Waiting for pool close")
+		pool.close()
+		print ("Batch k=%d Done."%k)
+	print ("Done")
+	sys.exit()
