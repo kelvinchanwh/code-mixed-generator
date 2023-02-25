@@ -65,6 +65,7 @@ def process_file(in_f, output_path, pregcm_path, rcm_path, lang1_code, lang2_cod
 	try:
 		with open(in_f, "r") as input_file, open(output_path + "/" + in_f.split("/")[-1].replace(".raw", ""), "w+") as output_file:
 				if pregcm_path != "None":
+					pregcm_path = os.path.join(pregcm_path, in_f.split("/")[-1].replace(".raw", "").replace("out", "input"))
 					pregcm = open(pregcm_path, "r").read().split("\n\n")
 					tree_dict = dict()
 					for sent in pregcm:
