@@ -251,14 +251,15 @@ def main(combined_data):
         # print("myModel1:", myModel1.__dict__)
         # print("mySentencePair:", mySentencePair.__dict__)
         # print("dfa1:", dfa1.__dict__)
+        
         # dfa1.printDfa()
         # dfa1.printGraphicDfa("before")
         generateAllSentencesML(dfa1, dfa1.initialStates[0], '', '', [])
 
         # Matrix language 2
-        myModel1 = insertionalModelStructure_2()
-        dfa1 = makeInsertionalLattice(myModel1, mySentencePair)
-        generateAllSentencesML(dfa1, dfa1.initialStates[0], '', '', [])
+        # myModel1 = insertionalModelStructure_2()
+        # dfa1 = makeInsertionalLattice(myModel1, mySentencePair)
+        # generateAllSentencesML(dfa1, dfa1.initialStates[0], '', '', [])
         
         all_CM_sentences_sorted = sorted(list(all_CM_sentences))
         
