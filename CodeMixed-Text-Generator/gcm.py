@@ -11,6 +11,7 @@ import functools
 import nltk
 import subprocess
 import gc
+from contextlib import ExitStack
 
 from configparser import ConfigParser
 from utils import rcm_std_mean, spf_sampling, frac_std_mean, frac_sampling
@@ -54,7 +55,7 @@ def lang_tag(gcm_raw_output, parse_string_src, source_lang, target_lang):
         tagged_strings.append(('|||'.join(tagged_tokens), parse_string_cm))
     return tagged_strings
 
-def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, lang1_code, lang2_code, rcm_file, linguistic_theory):
+def run_sh(inpfile, outfile, source_lang, target_lang, k_list, lid_output, sampling, lang1_code, lang2_code, rcm_file, linguistic_theory):
     logger = logging.getLogger(__name__)
     working_dir = "{}/cm_text_gnenerator/generator/"
     errfile = '{}.err'.format(inpfile)
@@ -64,75 +65,85 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k, lid_output, sampling, 
     count = 0
     outputs = []
     out_string = ""
-    with open_file(inpfile, 'r') as inpfile_f, open(outfile, 'w+') as f, open(outfile + ".raw", 'w+') as raw_f:
-        for line in inpfile_f.read().split('\n'):
-            if line != "":
-                out_string += line + '\n'
-            else:
-                arguments = out_string.split('\n')
-                arguments.append(linguistic_theory)
-                out_string = ""
+    with open_file(inpfile, 'r') as inpfile_f, open(outfile + ".raw", 'w+') as raw_f:
+        with ExitStack() as stack:
+            filenames = [os.path.join("/".join(outfile.split("/")[:-1]), "k-%d"%i, outfile.split("/")[-1]) for i in k_list]
+            files = [
+                stack.enter_context(open(filename, "w+"))
+                for filename in filenames
+            ]
+            map = dict()
+            for i in range(len(k_list)):
+                map[k_list[i]] = files[i]
+            for line in inpfile_f.read().split('\n'):
+                if line != "":
+                    out_string += line + '\n'
+                else:
+                    arguments = out_string.split('\n')
+                    arguments.append(linguistic_theory)
+                    out_string = ""
 
-                source, dest = multiprocessing.Pipe()
-                p = multiprocessing.Process(target=run_in_try, args=(
-                    cm_text_generator.bench_Merged.main, source, arguments,))
-                p.start()
-                t = 10
-                timeout = 30
-                p.join(t)
-                ret = 'fail'
-                if p.exitcode is None or p.exitcode >= 0:
-                    if dest.poll(timeout):
-                        recv = dest.recv()
-                        ret = recv[0]
-                        sentence_1 = recv[1]
-                        sentence_2 = recv[2]
-                        alignment = recv[3]
-                dest.close()
-                p.terminate()
+                    source, dest = multiprocessing.Pipe()
+                    p = multiprocessing.Process(target=run_in_try, args=(
+                        cm_text_generator.bench_Merged.main, source, arguments,))
+                    p.start()
+                    t = 10
+                    timeout = 30
+                    p.join(t)
+                    ret = 'fail'
+                    if p.exitcode is None or p.exitcode >= 0:
+                        if dest.poll(timeout):
+                            recv = dest.recv()
+                            ret = recv[0]
+                            sentence_1 = recv[1]
+                            sentence_2 = recv[2]
+                            alignment = recv[3]
+                    dest.close()
+                    p.terminate()
 
-                if type(ret) != str and len(ret) > 0:
+                    if type(ret) != str and len(ret) > 0:
 
-                    # Write raw outputs for future processing
-                    raw_f.write("\n[BREAK]" + "\n[SENT1]" + sentence_1 + "\n[SENT2]" + sentence_2 + "\n[ALIGN]" + alignment)
-                    for j in ret:
-                        raw_f.write("\n[CM]" + j[0])
-                    raw_f.write("\n[TREE]" + arguments[3] + "\n")
+                        # Write raw outputs for future processing
+                        raw_f.write("\n[BREAK]" + "\n[SENT1]" + sentence_1 + "\n[SENT2]" + sentence_2 + "\n[ALIGN]" + alignment)
+                        for j in ret:
+                            raw_f.write("\n[CM]" + j[0])
+                        raw_f.write("\n[TREE]" + arguments[3] + "\n")
 
-                    # random sample only if k != -1 and sampling is not spf
-                    if k !=-1 and len(ret) >= k and sampling != 'spf':
-                        ret = random.sample(ret, k)
-                    # word level language tagging
-                    if lid_output == 1:
-                        init_ret = ret.copy()
-                        try:
-                            ret = lang_tag(ret, arguments[3], source_lang, target_lang)
-                        except ValueError:
-                            ret = init_ret
-                            print ("Could not parse tree, skipping sentence")
-                            continue
-                    # spf based sampling
-                    if sampling == 'spf':
-                        langtags = [lang1_code.upper(), lang2_code.upper()]
+                        for k in k_list:
+                            # random sample only if k != -1 and sampling is not spf
+                            if k !=-1 and len(ret) >= k and sampling != 'spf':
+                                ret = random.sample(ret, k)
+                            # word level language tagging
+                            if lid_output == 1:
+                                init_ret = ret.copy()
+                                try:
+                                    ret = lang_tag(ret, arguments[3], source_lang, target_lang)
+                                except ValueError:
+                                    ret = init_ret
+                                    print ("Could not parse tree, skipping sentence")
+                                    continue
+                            # spf based sampling
+                            if sampling == 'spf':
+                                langtags = [lang1_code.upper(), lang2_code.upper()]
 
-                        spf_mean, spf_std = rcm_std_mean.main(rcm_file, langtags)
-                        ret = spf_sampling.rank(ret, langtags, spf_mean, spf_std)
+                                spf_mean, spf_std = rcm_std_mean.main(rcm_file, langtags)
+                                ret = spf_sampling.rank(ret, langtags, spf_mean, spf_std)
 
-                        if len(ret) >= k:
-                            ret = ret[:k]
-                    elif sampling == 'frac':
-                        langtags = [lang1_code.upper(), lang2_code.upper()]
+                                if len(ret) >= k:
+                                    ret = ret[:k]
+                            elif sampling == 'frac':
+                                langtags = [lang1_code.upper(), lang2_code.upper()]
 
-                        frac_mean, frac_std = frac_std_mean.main(rcm_file, langtags)
-                        ret = frac_sampling.rank(ret, langtags, frac_mean, frac_std)
+                                frac_mean, frac_std = frac_std_mean.main(rcm_file, langtags)
+                                ret = frac_sampling.rank(ret, langtags, frac_mean, frac_std)
 
-                    ret = [cs + (sentence_1, sentence_2, alignment) for cs in ret]
-                    # final generated cm to be added for each input sentence pair
-                    # outputs.append(ret)
-                    for j in ret:
-                        finaloutput = "\n[SENT1]" + j[2] + "\n[SENT2]" + j[3] + "\n[ALIGN]" + j[4] + "\n[CM]" + j[0] + "\n[TREE]" + arguments[3] + "\n"
-                        f.write(finaloutput)
-            gc.collect()
+                            ret = [cs + (sentence_1, sentence_2, alignment) for cs in ret]
+                            # final generated cm to be added for each input sentence pair
+                            # outputs.append(ret)
+                            for j in ret:
+                                finaloutput = "\n[SENT1]" + j[2] + "\n[SENT2]" + j[3] + "\n[ALIGN]" + j[4] + "\n[CM]" + j[0] + "\n[TREE]" + arguments[3] + "\n"
+                                map[k].write(finaloutput)
+                gc.collect()
     # return outputs
 
 
@@ -158,7 +169,7 @@ if __name__ == "__main__":
     gcm_input_loc = config_gcm["gcm_input_loc"] if config_gcm["gcm_input_loc"] else pregcm_output_loc
     gcm_output_loc = config_gcm["gcm_output_loc"] if config_gcm["gcm_output_loc"] else lang1_code + "-to-" + lang2_code + "-gcm"
     linguistic_theory = config_gcm["linguistic_theory"] if config_gcm["linguistic_theory"] else "ec"
-    k = int(config_gcm["k"]) if config_gcm["k"] else 5
+    k = list(map(int,config_gcm["k"].split())) if config_gcm["k"] else [1, 3, 5]
     lid_output = int(config_output["lid_output"]) if config_output["lid_output"] else 0
     sampling = config_output["sampling"] if config_output["sampling"] else "random"
     rcm_file = config_output["rcm_file"] if config_output["rcm_file"] else "rcm_lang_tagged.txt"
@@ -182,6 +193,8 @@ if __name__ == "__main__":
         time.sleep(30)
     shutil.rmtree(outdir, ignore_errors=True)
     os.makedirs(outdir)
+    for i in k:
+        os.makedirs(os.path.join(outdir, "k-%d"%i))
 
     # setup initial variables
     count_file = "{}/count".format(inputdir)
