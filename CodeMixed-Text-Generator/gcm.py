@@ -65,6 +65,7 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k_list, lid_output, sampl
     count = 0
     outputs = []
     out_string = ""
+    k_list = sorted(k_list, reverse=True)
     with open_file(inpfile, 'r') as inpfile_f, open(outfile + ".raw", 'w+') as raw_f:
         with ExitStack() as stack:
             filenames = [os.path.join("/".join(outfile.split("/")[:-1]), "k-%d"%i, outfile.split("/")[-1]) for i in k_list]
@@ -108,8 +109,9 @@ def run_sh(inpfile, outfile, source_lang, target_lang, k_list, lid_output, sampl
                         for j in ret:
                             raw_f.write("\n[CM]" + j[0])
                         raw_f.write("\n[TREE]" + arguments[3] + "\n")
-
+                        full_ret = ret.copy()
                         for k in k_list:
+                            ret = full_ret.copy()
                             # random sample only if k != -1 and sampling is not spf
                             if k !=-1 and len(ret) >= k and sampling != 'spf':
                                 ret = random.sample(ret, k)
